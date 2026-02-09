@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+alembic
+pydantic
+python-dotenv
+httpx
+openai>=1.0
+pypdf>=4.0
+python-docx>=1.0
+python-multipart
