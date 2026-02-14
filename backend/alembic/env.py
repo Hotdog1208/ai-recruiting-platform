@@ -1,13 +1,15 @@
 from logging.config import fileConfig
+import os
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
+from dotenv import load_dotenv
 
 from alembic import context
-from dotenv import load_dotenv
-import os
 
-load_dotenv()
+# Load backend/.env so DATABASE_URL is available (run from backend or repo root).
+_backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+load_dotenv(os.path.join(_backend_dir, ".env"))
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -23,12 +25,18 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 from app.db.base import Base
-from app.models.user import User
-from app.models.candidate import Candidate
-from app.models.employer import Employer
-from app.models.job import Job
+from app.models import (  # noqa: F401 - required for autogenerate
+    User, Candidate, Employer, Job, Application,
+    ExternalJob, SavedJob, Match, EmployerNote, Plan, Subscription, UsageCounter, AuditLog,
+)
+from app.core.env_validation import validate_database_url
 
 target_metadata = Base.metadata
+
+# Validate and set DATABASE_URL so we fail with a clear message instead of SQLAlchemy port parse errors.
+_raw_url = os.getenv("DATABASE_URL")
+_validated_url = validate_database_url(_raw_url)
+config.set_main_option("sqlalchemy.url", _validated_url)
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -67,14 +75,9 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    config.set_main_option(
-        "sqlalchemy.url",
-        os.getenv("DATABASE_URL")
-    )
-    
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
+    from sqlalchemy import create_engine
+    connectable = create_engine(
+        _validated_url,
         poolclass=pool.NullPool,
     )
 

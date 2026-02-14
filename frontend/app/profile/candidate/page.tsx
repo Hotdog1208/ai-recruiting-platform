@@ -33,7 +33,7 @@ const selectClass = "w-full px-4 py-2.5 rounded-lg bg-zinc-900/50 border border-
 export default function CandidateProfilePage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { user, role, loading } = useAuth();
+  const { user, role, loading, session } = useAuth();
   const [profile, setProfile] = useState<CandidateProfile | null>(null);
   const [fullName, setFullName] = useState("");
   const [age, setAge] = useState("");
@@ -50,6 +50,7 @@ export default function CandidateProfilePage() {
   const [success, setSuccess] = useState(false);
   const [resumeUploading, setResumeUploading] = useState(false);
   const [resumeError, setResumeError] = useState("");
+  const [resumeWarning, setResumeWarning] = useState("");
 
   const states = country ? getStates(country) : [];
   const cities = country && state ? getCities(country, state) : [];
@@ -59,8 +60,8 @@ export default function CandidateProfilePage() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    if (!user) return;
-    apiGet<CandidateProfile>(`/candidates/by-user/${user.id}`)
+    if (!user || !session?.access_token) return;
+    apiGet<CandidateProfile>(`/candidates/by-user/${user.id}`, session.access_token)
       .then((p) => {
         setProfile(p);
         setFullName(p.full_name);
@@ -76,7 +77,7 @@ export default function CandidateProfilePage() {
         setSkillsText(Array.isArray(p.skills) ? p.skills.join(", ") : "");
       })
       .catch(() => {});
-  }, [user]);
+  }, [user, session?.access_token]);
 
   useEffect(() => {
     if (role === "employer") router.push("/profile/employer");
@@ -85,24 +86,36 @@ export default function CandidateProfilePage() {
   const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
+    if (!session?.access_token) {
+      setResumeError("Please log in again to upload your resume.");
+      return;
+    }
     const valid = ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain"];
     if (!valid.includes(file.type) && !file.name.match(/\.(pdf|docx|doc|txt)$/i)) {
-      setResumeError("Please upload PDF, DOCX, or TXT");
+      setResumeError("Please upload PDF, DOCX, or TXT (max 10MB).");
       return;
     }
     setResumeUploading(true);
     setResumeError("");
+    setResumeWarning("");
     try {
-      const res = await apiUpload<{ parsed: { skills?: string[]; full_name?: string; location?: string } }>(
-        `/candidates/by-user/${user.id}/resume`,
-        file
-      );
-      setFullName(res.parsed?.full_name || fullName);
-      if (res.parsed?.skills?.length) setSkillsText(res.parsed.skills.join(", "));
+      const res = await apiUpload<{
+        parsed: Record<string, unknown>;
+        warnings?: string[];
+        ai_used?: boolean;
+      }>(`/candidates/by-user/${user.id}/resume`, file, session.access_token);
+      setFullName((res.parsed?.full_name as string) || fullName);
+      if (Array.isArray(res.parsed?.skills) && res.parsed.skills.length) {
+        setSkillsText((res.parsed.skills as string[]).join(", "));
+      }
       setSuccess(true);
       setProfile((p) => p ? { ...p, resume_parsed_data: res.parsed } : null);
+      if (res.warnings?.length && !res.ai_used) {
+        setResumeWarning(res.warnings[0] ?? "Basic extraction used. You can edit fields below.");
+      }
     } catch (err) {
-      setResumeError(err instanceof Error ? err.message : "Upload failed");
+      const msg = err instanceof Error ? err.message : "Upload failed";
+      setResumeError(msg.includes("401") || msg.toLowerCase().includes("invalid token") ? "Session expired. Please log in again and try again." : msg);
     } finally {
       setResumeUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -111,7 +124,7 @@ export default function CandidateProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user || !session?.access_token) return;
     setSaving(true);
     setSuccess(false);
     try {
@@ -127,7 +140,7 @@ export default function CandidateProfilePage() {
         work_preference: workPreference || null,
         work_type: workType || null,
         skills: skillsText.split(",").map((s) => s.trim()).filter(Boolean),
-      });
+      }, session.access_token);
       setSuccess(true);
     } catch {
       // error
@@ -161,6 +174,7 @@ export default function CandidateProfilePage() {
             {resumeUploading ? "Parsing..." : "Upload & parse resume"}
           </Button>
           {resumeError ? <p className="mt-2 text-sm text-red-400">{resumeError}</p> : null}
+          {resumeWarning ? <p className="mt-2 text-sm text-amber-400">{resumeWarning}</p> : null}
           {profile?.resume_parsed_data ? (
             <p className="mt-2 text-sm text-teal-400">✓ Resume parsed successfully</p>
           ) : null}

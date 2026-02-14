@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { apiGet, apiPatch } from "@/lib/api";
+import { apiGet, apiPut } from "@/lib/api";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 
@@ -35,7 +35,7 @@ const selectClass = "w-full px-4 py-2.5 rounded-lg bg-zinc-900/50 border border-
 
 export default function EmployerProfilePage() {
   const router = useRouter();
-  const { user, role, loading } = useAuth();
+  const { user, role, loading, session } = useAuth();
   const [companyName, setCompanyName] = useState("");
   const [industry, setIndustry] = useState("");
   const [website, setWebsite] = useState("");
@@ -50,8 +50,8 @@ export default function EmployerProfilePage() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    if (!user) return;
-    apiGet<EmployerProfile>(`/employers/by-user/${user.id}`)
+    if (!user || !session?.access_token) return;
+    apiGet<EmployerProfile>("/employers/me", session.access_token)
       .then((p) => {
         setCompanyName(p.company_name);
         setIndustry(p.industry || "");
@@ -61,7 +61,7 @@ export default function EmployerProfilePage() {
         setDescription(p.description || "");
       })
       .catch(() => {});
-  }, [user]);
+  }, [user, session?.access_token]);
 
   useEffect(() => {
     if (role === "candidate") router.push("/profile/candidate");
@@ -69,18 +69,18 @@ export default function EmployerProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!session?.access_token) return;
     setSaving(true);
     setSuccess(false);
     try {
-      await apiPatch(`/employers/by-user/${user.id}`, {
+      await apiPut("/employers/me", {
         company_name: companyName.trim(),
         industry: industry.trim() || null,
         website: website.trim() || null,
         company_size: companySize || null,
         location: location.trim() || null,
         description: description.trim() || null,
-      });
+      }, session.access_token);
       setSuccess(true);
     } catch {
       // error

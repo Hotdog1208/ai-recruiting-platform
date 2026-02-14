@@ -1,22 +1,14 @@
-"""Saved jobs API - candidates save jobs to apply later."""
+"""Saved jobs API - candidates save jobs to apply later. All routes require candidate JWT."""
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-
-from app.db.session import get_db
-from app.models import SavedJob, Job, Candidate
 from sqlalchemy import and_
 
+from app.db.session import get_db
+from app.core.deps import get_current_candidate
+from app.models import SavedJob, Job, Candidate
+
 router = APIRouter(prefix="/saved-jobs", tags=["saved-jobs"])
-
-
-def _resolve_candidate(candidate_id: UUID | None, user_id: UUID | None, db: Session) -> Candidate | None:
-    """Resolve candidate by id or by user_id."""
-    if candidate_id:
-        return db.query(Candidate).filter(Candidate.id == candidate_id).first()
-    if user_id:
-        return db.query(Candidate).filter(Candidate.user_id == user_id).first()
-    return None
 
 
 def _job_to_item(job: Job) -> dict:
@@ -31,14 +23,10 @@ def _job_to_item(job: Job) -> dict:
 
 @router.get("")
 def list_saved_jobs(
-    candidate_id: UUID | None = Query(None),
-    user_id: UUID | None = Query(None),
+    candidate: Candidate = Depends(get_current_candidate),
     db: Session = Depends(get_db),
 ):
-    """List jobs saved by a candidate. Pass candidate_id or user_id."""
-    candidate = _resolve_candidate(candidate_id, user_id, db)
-    if not candidate:
-        raise HTTPException(status_code=404, detail="Candidate not found")
+    """List jobs saved by the current candidate (candidate JWT required)."""
     saved = db.query(SavedJob).filter(SavedJob.candidate_id == candidate.id).order_by(SavedJob.created_at.desc()).all()
     result = []
     for s in saved:
@@ -54,14 +42,10 @@ def list_saved_jobs(
 @router.post("")
 def save_job(
     job_id: UUID = Query(...),
-    candidate_id: UUID | None = Query(None),
-    user_id: UUID | None = Query(None),
+    candidate: Candidate = Depends(get_current_candidate),
     db: Session = Depends(get_db),
 ):
-    """Save a job for later. Pass candidate_id or user_id."""
-    candidate = _resolve_candidate(candidate_id, user_id, db)
-    if not candidate:
-        raise HTTPException(status_code=404, detail="Candidate not found")
+    """Save a job for later (candidate JWT required)."""
     job = db.query(Job).filter(Job.id == job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
@@ -79,14 +63,10 @@ def save_job(
 @router.delete("")
 def unsave_job(
     job_id: UUID = Query(...),
-    candidate_id: UUID | None = Query(None),
-    user_id: UUID | None = Query(None),
+    candidate: Candidate = Depends(get_current_candidate),
     db: Session = Depends(get_db),
 ):
-    """Remove a saved job. Pass candidate_id or user_id."""
-    candidate = _resolve_candidate(candidate_id, user_id, db)
-    if not candidate:
-        raise HTTPException(status_code=404, detail="Candidate not found")
+    """Remove a saved job (candidate JWT required)."""
     db.query(SavedJob).filter(
         and_(SavedJob.candidate_id == candidate.id, SavedJob.job_id == job_id)
     ).delete()
@@ -97,14 +77,10 @@ def unsave_job(
 @router.get("/check")
 def check_saved(
     job_id: UUID = Query(...),
-    candidate_id: UUID | None = Query(None),
-    user_id: UUID | None = Query(None),
+    candidate: Candidate = Depends(get_current_candidate),
     db: Session = Depends(get_db),
 ):
-    """Check if a job is saved by candidate. Pass candidate_id or user_id."""
-    candidate = _resolve_candidate(candidate_id, user_id, db)
-    if not candidate:
-        return {"saved": False}
+    """Check if a job is saved by the current candidate (candidate JWT required)."""
     exists = db.query(SavedJob).filter(
         and_(SavedJob.candidate_id == candidate.id, SavedJob.job_id == job_id)
     ).first()

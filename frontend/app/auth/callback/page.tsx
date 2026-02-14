@@ -24,13 +24,17 @@ export default function AuthCallbackPage() {
       setMode("recovery");
     } else {
       setMode("redirect");
+      if (!supabase) {
+        router.replace("/");
+        return;
+      }
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session?.user) {
           router.replace("/dashboard/candidate");
         } else {
           router.replace("/");
         }
-      });
+      }).catch(() => router.replace("/"));
     }
   }, [router]);
 
@@ -47,6 +51,11 @@ export default function AuthCallbackPage() {
     }
     setSubmitting(true);
     try {
+      if (!supabase) {
+        setError("Auth is not configured");
+        setSubmitting(false);
+        return;
+      }
       const { error: err } = await supabase.auth.updateUser({ password });
       if (err) {
         setError(err.message);

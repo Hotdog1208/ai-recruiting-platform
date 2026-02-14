@@ -17,7 +17,7 @@ export default function PrivacyPage() {
         </section>
         <section>
           <h2 className="text-lg font-semibold text-white">3. AI processing</h2>
-          <p>Your resume is processed by AI (OpenAI) to extract skills, experience, and job fit. We do not use protected characteristics (race, gender, age) in matching. See our <Link href="/ai-disclosure" className="text-teal-400 hover:text-teal-300">AI disclosure</Link>.</p>
+          <p>Your resume is processed by AI (OpenAI) to extract skills, experience, and job fit. We do not use protected characteristics (race, gender, age) in matching. See our <Link href="/ai-disclaimer" className="text-teal-400 hover:text-teal-300">AI disclosure</Link>.</p>
         </section>
         <section>
           <h2 className="text-lg font-semibold text-white">4. Sharing</h2>

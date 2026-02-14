@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 160" fill="none" aria-hidden="true">
+  <circle cx="100" cy="50" r="28" stroke="currentColor" stroke-width="1.5" class="text-zinc-600" fill="none"/>
+  <path d="M50 120c0-28 22-50 50-50s50 22 50 50" stroke="currentColor" stroke-width="1.5" class="text-zinc-600" fill="none"/>
+  <path d="M75 95h50v8H75v-8zm0 18h35v6H75v-6z" stroke="currentColor" stroke-width="1" class="text-zinc-500" fill="none"/>
+</svg>

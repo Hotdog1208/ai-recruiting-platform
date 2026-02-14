@@ -6,13 +6,13 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex flex-col bg-[#0a0a0a]">
-      <header className="border-b border-white/5 bg-[#0a0a0a]/95 backdrop-blur-xl">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
-          <Link href="/" className="text-lg font-bold text-white">
-            Recruiter<span className="text-teal-400">.Solutions</span>
+    <div className="min-h-screen flex flex-col bg-[var(--bg)]">
+      <header className="border-b border-[var(--border)] bg-[var(--bg)]/95 backdrop-blur-xl">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
+          <Link href="/" className="font-display font-bold text-[17px] text-white tracking-tight hover:text-[var(--accent)] transition-colors">
+            Recruiter<span className="text-[var(--accent)]">.</span>Solutions
           </Link>
-          <Link href="/" className="text-sm text-zinc-400 hover:text-white transition-colors">
+          <Link href="/" className="text-[13px] text-[var(--text-muted)] hover:text-white transition-colors font-medium">
             ← Back to home
           </Link>
         </div>

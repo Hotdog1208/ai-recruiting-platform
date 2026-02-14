@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { apiGet } from "@/lib/api";
+import { apiGet, apiPatch } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
 
 type Applicant = {
@@ -29,18 +29,12 @@ const STATUS_OPTIONS = [
 export default function JobApplicantsPage() {
   const params = useParams();
   const router = useRouter();
-  const { user, role, loading } = useAuth();
+  const { user, role, loading, session } = useAuth();
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [jobTitle, setJobTitle] = useState("");
   const [loadingData, setLoadingData] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
-
-  const loadApplicants = async () => {
-    if (!params.id) return;
-    const apps = await apiGet<Applicant[]>(`/applications/by-job/${params.id}`);
-    setApplicants(apps);
-  };
 
   useEffect(() => {
     if (!loading && !user) router.push("/login");
@@ -51,27 +45,30 @@ export default function JobApplicantsPage() {
   }, [user, role, loading, router]);
 
   useEffect(() => {
-    if (!params.id) return;
-    loadApplicants()
-      .catch(() => setApplicants([]))
-      .finally(() => setLoadingData(false));
-    apiGet<{ title: string }>(`/jobs/${params.id}`)
-      .then((j) => setJobTitle(j.title))
+    if (!params.id || !session?.access_token) return;
+    let cancelled = false;
+    const token = session.access_token;
+    apiGet<Applicant[]>(`/applications/by-job/${params.id}`, token)
+      .then((apps) => { if (!cancelled) setApplicants(apps); })
+      .catch(() => { if (!cancelled) setApplicants([]); })
+      .finally(() => { if (!cancelled) setLoadingData(false); });
+    apiGet<{ title: string }>(`/jobs/${params.id}`, token)
+      .then((j) => { if (!cancelled) setJobTitle(j.title); })
       .catch(() => {});
-  }, [params.id]);
+    return () => { cancelled = true; };
+  }, [params.id, session?.access_token]);
 
   const handleStatusChange = async (appId: string, newStatus: string) => {
     setUpdatingId(appId);
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
     try {
-      const res = await fetch(`${baseUrl}/applications/${appId}?status=${newStatus}`, {
-        method: "PATCH",
-      });
-      if (res.ok) {
-        setApplicants((prev) =>
-          prev.map((a) => (a.id === appId ? { ...a, status: newStatus } : a))
-        );
-      }
+      await apiPatch(
+        `/applications/${appId}?status=${newStatus}`,
+        {},
+        session?.access_token
+      );
+      setApplicants((prev) =>
+        prev.map((a) => (a.id === appId ? { ...a, status: newStatus } : a))
+      );
     } finally {
       setUpdatingId(null);
     }

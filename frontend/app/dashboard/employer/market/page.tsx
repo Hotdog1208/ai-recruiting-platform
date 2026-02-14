@@ -19,7 +19,7 @@ type ExternalJob = {
 };
 
 export default function EmployerMarketPage() {
-  const { user, role } = useAuth();
+  const { role } = useAuth();
   const [jobs, setJobs] = useState<ExternalJob[]>([]);
   const [loading, setLoading] = useState(true);
 

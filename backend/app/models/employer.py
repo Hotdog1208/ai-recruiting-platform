@@ -1,7 +1,9 @@
 import uuid
-from sqlalchemy import Column, String, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID, JSON
+from datetime import datetime
+from sqlalchemy import Column, String, ForeignKey, DateTime
+from sqlalchemy.dialects.postgresql import UUID
 from app.db.base import Base
+
 
 class Employer(Base):
     __tablename__ = "employers"
@@ -11,6 +13,12 @@ class Employer(Base):
     company_name = Column(String, nullable=False)
     industry = Column(String, nullable=True)
     website = Column(String, nullable=True)
+    domain = Column(String, nullable=True)
     company_size = Column(String, nullable=True)
     location = Column(String, nullable=True)
     description = Column(String, nullable=True)
+    logo_url = Column(String, nullable=True)
+    verification_status = Column(String, nullable=True)  # pending, verified, rejected
+    verification_method = Column(String, nullable=True)  # email, manual
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

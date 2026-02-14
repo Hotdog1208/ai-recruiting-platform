@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { apiGet } from "@/lib/api";
+import { apiGet, apiDelete } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
@@ -17,30 +17,30 @@ type SavedJob = {
 };
 
 export default function SavedJobsPage() {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [jobs, setJobs] = useState<SavedJob[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadJobs = useCallback(async () => {
-    if (!user) return;
+    if (!user || !session?.access_token) return;
     setLoading(true);
     try {
-      const data = await apiGet<SavedJob[]>(`/saved-jobs?user_id=${user.id}`);
+      const data = await apiGet<SavedJob[]>(`/saved-jobs`, session.access_token);
       setJobs(data);
     } catch {
       setJobs([]);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, session?.access_token]);
 
   useEffect(() => {
     loadJobs();
   }, [loadJobs]);
 
   const handleUnsave = async (jobId: string) => {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
-    await fetch(`${baseUrl}/saved-jobs?job_id=${jobId}&user_id=${user?.id}`, { method: "DELETE" });
+    if (!session?.access_token) return;
+    await apiDelete(`/saved-jobs?job_id=${jobId}`, session.access_token);
     setJobs((prev) => prev.filter((j) => j.id !== jobId));
   };
 

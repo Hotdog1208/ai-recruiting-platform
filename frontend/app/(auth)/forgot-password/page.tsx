@@ -15,6 +15,10 @@ export default function ForgotPasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    if (!supabase) {
+      setError("Auth is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local");
+      return;
+    }
     setSubmitting(true);
     try {
       const redirectTo = `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback`;

@@ -5,8 +5,6 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiGet } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
-import { Input } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
 import { SaveJobButton } from "@/components/jobs/SaveJobButton";
 import { ShareJobButton } from "@/components/jobs/ShareJobButton";
 
@@ -40,7 +38,7 @@ type CandidateProfile = {
 };
 
 export default function CandidateDashboardPage() {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
   const [browseJobs, setBrowseJobs] = useState<Job[]>([]);
   const [profile, setProfile] = useState<CandidateProfile | null>(null);
@@ -51,12 +49,12 @@ export default function CandidateDashboardPage() {
 
   useEffect(() => {
     async function load() {
-      if (!user) return;
+      if (!user || !session?.access_token) return;
       try {
         const [profileRes, ...rest] = await Promise.all([
-          apiGet<CandidateProfile>(`/candidates/by-user/${user.id}`).catch(() => null),
-          apiGet<Job[]>(`/matching/recommended?user_id=${user.id}`).catch(() => []),
-          apiGet<Job[]>(`/matching/browse?user_id=${user.id}&include_external=true`).catch(() => []),
+          apiGet<CandidateProfile>(`/candidates/by-user/${user.id}`, session.access_token).catch(() => null),
+          apiGet<Job[]>(`/matching/recommended`, session.access_token).catch(() => []),
+          apiGet<Job[]>(`/matching/browse?include_external=true`, session.access_token).catch(() => []),
         ]);
         setProfile(profileRes);
         setRecommendedJobs(Array.isArray(rest[0]) ? rest[0] : []);
@@ -69,7 +67,7 @@ export default function CandidateDashboardPage() {
       }
     }
     load();
-  }, [user]);
+  }, [user, session?.access_token]);
 
   const filterJobs = (jobs: Job[]) => {
     return jobs.filter((j) => {
@@ -98,7 +96,7 @@ export default function CandidateDashboardPage() {
                 </span>
               )}
               {showMatch && job.match_score != null && (
-                <span className="px-2.5 py-1 bg-teal-500/20 text-teal-400 rounded-md text-xs font-medium">
+                <span className="px-2.5 py-1 bg-[var(--accent-dim)] text-[var(--accent)] rounded-[var(--radius-sm)] text-[11px] font-semibold uppercase tracking-wider">
                   {job.match_score}% match
                 </span>
               )}

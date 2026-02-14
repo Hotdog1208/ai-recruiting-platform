@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { apiGet } from "@/lib/api";
+import { apiGet, apiPost, apiDelete } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
 
 type Job = {
   id: string;
@@ -23,7 +24,8 @@ type EmployerProfile = {
 };
 
 export default function EmployerDashboardPage() {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
+  const toast = useToast();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [profile, setProfile] = useState<EmployerProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -37,16 +39,20 @@ export default function EmployerDashboardPage() {
 
   useEffect(() => {
     async function load() {
-      if (!user) return;
+      if (!user || !session?.access_token) return;
       try {
-        const profileRes = await apiGet<EmployerProfile>(`/employers/by-user/${user.id}`);
+        const profileRes = await apiGet<EmployerProfile>("/employers/me", session.access_token).catch(() => null);
         setProfile(profileRes);
-        const jobsRes = await apiGet<Job[]>(`/jobs?employer_id=${profileRes.id}`);
+        if (!profileRes?.id) {
+          setLoading(false);
+          return;
+        }
+        const jobsRes = await apiGet<Job[]>("/jobs/mine", session.access_token).catch(() => []);
         setJobs(jobsRes);
         const counts: Record<string, number> = {};
         for (const job of jobsRes) {
           try {
-            const apps = await apiGet<{ id: string }[]>(`/applications/by-job/${job.id}`);
+            const apps = await apiGet<{ id: string }[]>(`/applications/by-job/${job.id}`, session.access_token);
             counts[job.id] = apps.length;
           } catch {
             counts[job.id] = 0;
@@ -60,16 +66,16 @@ export default function EmployerDashboardPage() {
       }
     }
     load();
-  }, [user]);
+  }, [user, session?.access_token]);
 
   const loadJobs = async () => {
-    if (!profile) return;
-    const jobsRes = await apiGet<Job[]>(`/jobs?employer_id=${profile.id}`);
+    if (!session?.access_token) return;
+    const jobsRes = await apiGet<Job[]>("/jobs/mine", session.access_token);
     setJobs(jobsRes);
     const counts: Record<string, number> = {};
     for (const job of jobsRes) {
       try {
-        const apps = await apiGet<{ id: string }[]>(`/applications/by-job/${job.id}`);
+        const apps = await apiGet<{ id: string }[]>(`/applications/by-job/${job.id}`, session.access_token);
         counts[job.id] = apps.length;
       } catch {
         counts[job.id] = 0;
@@ -84,26 +90,20 @@ export default function EmployerDashboardPage() {
     setSubmitting(true);
     setJobError("");
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
-      const res = await fetch(`${baseUrl}/jobs?employer_id=${profile.id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      await apiPost(
+        "/jobs",
+        {
           title: newJob.title.trim(),
           description: newJob.description.trim() || undefined,
           location: newJob.location.trim() || undefined,
           remote: newJob.remote,
-        }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        const msg = Array.isArray(err.detail) ? err.detail.join("; ") : err.detail || "Failed to create job";
-        setJobError(msg);
-        return;
-      }
+        },
+        session?.access_token
+      );
       setNewJob({ title: "", description: "", location: "", remote: false });
       setShowForm(false);
       loadJobs();
+      toast.success("Job created");
     } catch (err) {
       setJobError(err instanceof Error ? err.message : "Failed to create job");
     } finally {
@@ -114,10 +114,10 @@ export default function EmployerDashboardPage() {
   const handleDeleteJob = async (jobId: string) => {
     if (!confirm("Delete this job? Applications will be removed too.")) return;
     setDeletingId(jobId);
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
     try {
-      const res = await fetch(`${baseUrl}/jobs/${jobId}`, { method: "DELETE" });
-      if (res.ok) loadJobs();
+      await apiDelete(`/jobs/${jobId}`, session?.access_token);
+      loadJobs();
+      toast.success("Job deleted");
     } finally {
       setDeletingId(null);
     }
@@ -126,19 +126,19 @@ export default function EmployerDashboardPage() {
   const handleDuplicateJob = async (job: Job) => {
     if (!profile) return;
     setDuplicatingId(job.id);
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
     try {
-      const res = await fetch(`${baseUrl}/jobs?employer_id=${profile.id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      await apiPost(
+        "/jobs",
+        {
           title: `${job.title} (Copy)`,
           description: job.description || undefined,
           location: job.location || undefined,
           remote: job.remote ?? false,
-        }),
-      });
-      if (res.ok) loadJobs();
+        },
+        session?.access_token
+      );
+      loadJobs();
+      toast.success("Job duplicated");
     } finally {
       setDuplicatingId(null);
     }

@@ -1,19 +1,22 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from pydantic import ValidationError
 
 from app.db.session import get_db
+from app.core.audit import log as audit_log
 from app.models import User, Candidate, Employer
 from app.schemas.auth import PostSignupRequest
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-BACKEND_URL = "http://127.0.0.1:8000"
-
 
 @router.post("/post-signup")
-def post_signup(payload: PostSignupRequest, db: Session = Depends(get_db)):
+def post_signup(
+    payload: PostSignupRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+):
     """Create user and role-specific profile after Supabase signup."""
     # Validate role-specific fields
     errors = payload.validate_role_fields()
@@ -52,4 +55,13 @@ def post_signup(payload: PostSignupRequest, db: Session = Depends(get_db)):
         db.add(employer)
 
     db.commit()
+    audit_log(
+        db,
+        "signup_complete",
+        actor_user_id=user.id,
+        entity_type="user",
+        entity_id=str(user.id),
+        ip=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
+    )
     return {"status": "ok"}

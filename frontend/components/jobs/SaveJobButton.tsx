@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { apiGet, apiPost, apiDelete } from "@/lib/api";
 
 type SaveJobButtonProps = {
   jobId: string;
@@ -9,29 +10,26 @@ type SaveJobButtonProps = {
 };
 
 export function SaveJobButton({ jobId, className = "" }: SaveJobButtonProps) {
-  const { user, role } = useAuth();
+  const { user, role, session } = useAuth();
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!user || role !== "candidate") return;
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
-    fetch(`${baseUrl}/saved-jobs/check?job_id=${jobId}&user_id=${user.id}`)
-      .then((r) => r.json())
+    if (!user || role !== "candidate" || !session?.access_token) return;
+    apiGet<{ saved: boolean }>(`/saved-jobs/check?job_id=${jobId}`, session.access_token)
       .then((d) => setSaved(d.saved))
       .catch(() => {});
-  }, [jobId, user?.id, role]);
+  }, [jobId, user, role, session?.access_token]);
 
   const toggle = async () => {
-    if (!user || role !== "candidate") return;
+    if (!user || role !== "candidate" || !session?.access_token) return;
     setLoading(true);
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
     try {
       if (saved) {
-        await fetch(`${baseUrl}/saved-jobs?job_id=${jobId}&user_id=${user.id}`, { method: "DELETE" });
+        await apiDelete(`/saved-jobs?job_id=${jobId}`, session.access_token);
         setSaved(false);
       } else {
-        await fetch(`${baseUrl}/saved-jobs?job_id=${jobId}&user_id=${user.id}`, { method: "POST" });
+        await apiPost(`/saved-jobs?job_id=${jobId}`, {}, session.access_token);
         setSaved(true);
       }
     } finally {
@@ -45,7 +43,7 @@ export function SaveJobButton({ jobId, className = "" }: SaveJobButtonProps) {
     <button
       onClick={toggle}
       disabled={loading}
-      className={`p-2 rounded-lg transition-colors ${saved ? "text-teal-400 hover:text-teal-300" : "text-zinc-400 hover:text-white"} ${className}`}
+      className={`p-2 rounded-lg transition-colors duration-200 ${saved ? "text-[var(--accent)] hover:text-[var(--accent-hover)]" : "text-[var(--text-muted)] hover:text-white"} ${className}`}
       title={saved ? "Unsave job" : "Save job"}
     >
       <svg className="w-5 h-5" fill={saved ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">

@@ -1,32 +1,86 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 export function Navbar() {
+  const { user, role } = useAuth();
+  const router = useRouter();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 80);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const handleSignOut = async () => {
+    if (supabase) await supabase.auth.signOut();
+    router.push("/");
+  };
+
   return (
-    <nav className="sticky top-0 z-50 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/5">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
-        <Link href="/" className="text-xl font-bold text-white tracking-tight">
-          Recruiter<span className="text-teal-400">.Solutions</span>
+    <motion.nav
+      className={`navbar nav-pill fixed top-6 left-1/2 -translate-x-1/2 z-[1000] w-[calc(100%-2rem)] max-w-5xl rounded-full transition-all duration-300 ${scrolled ? "scrolled" : ""}`}
+      initial={false}
+      animate={{
+        backgroundColor: scrolled ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)",
+        backdropFilter: "blur(24px) saturate(180%)",
+        boxShadow: scrolled
+          ? "0 0 0 1px rgba(255,255,255,0.08), 0 8px 32px rgba(0,0,0,0.24)"
+          : "0 0 0 1px rgba(255,255,255,0.06)",
+      }}
+      transition={{ duration: 0.3 }}
+    >
+      <div className="navbar-container flex items-center justify-between h-full px-5 sm:px-8 py-3">
+        <Link
+          href="/"
+          className="navbar-logo font-display font-bold text-[17px] text-white tracking-tight hover:text-[var(--accent-primary)] transition-colors duration-200 shrink-0"
+        >
+          Recruiter<span className="text-[var(--accent-primary)]">.</span>Solutions
         </Link>
-        <div className="flex items-center gap-1">
-          <Link href="/jobs" className="px-4 py-2 text-zinc-400 hover:text-white font-medium text-sm transition-colors">
-            Jobs
-          </Link>
-          <Link href="/how-it-works" className="hidden sm:inline px-4 py-2 text-zinc-400 hover:text-white font-medium text-sm transition-colors">
-            How it works
-          </Link>
-          <Link href="/pricing" className="hidden sm:inline px-4 py-2 text-zinc-400 hover:text-white font-medium text-sm transition-colors">
-            Pricing
-          </Link>
-          <Link href="/login" className="px-4 py-2 text-zinc-400 hover:text-white font-medium text-sm transition-colors">
-            Log in
-          </Link>
-          <Link href="/signup" className="px-4 py-2 bg-teal-500 text-black rounded-lg hover:bg-teal-400 font-semibold text-sm transition-all shadow-lg shadow-teal-500/20">
-            Sign up
-          </Link>
+        <div className="navbar-menu flex items-center gap-0.5 sm:gap-1">
+        <Link href="/jobs" className="nav-link px-4 py-2 text-[15px] text-[var(--text-secondary)] hover:text-white transition-colors duration-200 font-medium">
+          Jobs
+        </Link>
+        <Link href="/how-it-works" className="hidden sm:block nav-link px-4 py-2 text-[15px] text-[var(--text-secondary)] hover:text-white transition-colors duration-200 font-medium">
+          How it works
+        </Link>
+        <Link href="/pricing" className="hidden sm:block nav-link px-4 py-2 text-[15px] text-[var(--text-secondary)] hover:text-white transition-colors duration-200 font-medium">
+          Pricing
+        </Link>
+        {user ? (
+          <>
+            <Link
+              href={role === "employer" ? "/dashboard/employer" : "/dashboard/candidate"}
+              className="nav-link px-4 py-2 text-[15px] text-[var(--text-secondary)] hover:text-white transition-colors duration-200 font-medium"
+            >
+              Dashboard
+            </Link>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="px-4 py-2 text-[15px] text-[var(--text-secondary)] hover:text-white transition-colors duration-200 font-medium"
+            >
+              Sign out
+            </button>
+          </>
+        ) : (
+          <>
+            <Link href="/login" className="nav-link px-4 py-2 text-[15px] text-[var(--text-secondary)] hover:text-white transition-colors duration-200 font-medium">
+              Log in
+            </Link>
+            <Link href="/signup" className="btn-primary btn-magnetic text-[15px] font-semibold py-2.5 px-6 sm:ml-2">
+              Sign up
+            </Link>
+          </>
+        )}
         </div>
       </div>
-    </nav>
+    </motion.nav>
   );
 }

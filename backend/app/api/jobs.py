@@ -1,13 +1,24 @@
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
 
 from app.db.session import get_db
+from app.core.deps import get_current_employer, require_job_owner
+from app.core.audit import log as audit_log
 from app.models import Job, Employer, Application
 from app.schemas.job import JobCreate, JobUpdate, JobResponse
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
+
+
+@router.get("/mine", response_model=list[JobResponse])
+def list_my_jobs(
+    employer: Employer = Depends(get_current_employer),
+    db: Session = Depends(get_db),
+):
+    """List current employer's jobs (employer only)."""
+    return db.query(Job).filter(Job.employer_id == employer.id).order_by(Job.id.desc()).all()
 
 
 @router.get("", response_model=list[JobResponse])
@@ -18,7 +29,7 @@ def list_jobs(
     remote: bool | None = Query(None),
     db: Session = Depends(get_db),
 ):
-    """List jobs with optional filters."""
+    """List jobs with optional filters (public)."""
     query = db.query(Job)
     if employer_id:
         query = query.filter(Job.employer_id == employer_id)
@@ -63,12 +74,13 @@ def get_similar_jobs(job_id: UUID, limit: int = Query(5, le=10), db: Session = D
 
 
 @router.post("", response_model=JobResponse)
-def create_job(payload: JobCreate, employer_id: UUID, db: Session = Depends(get_db)):
-    """Create a job (employer only). Pass employer_id as query param."""
-    employer = db.query(Employer).filter(Employer.id == employer_id).first()
-    if not employer:
-        raise HTTPException(status_code=404, detail="Employer not found")
-
+def create_job(
+    payload: JobCreate,
+    request: Request,
+    employer: Employer = Depends(get_current_employer),
+    db: Session = Depends(get_db),
+):
+    """Create a job (employer only). Employer derived from JWT."""
     job = Job(
         employer_id=employer.id,
         title=payload.title,
@@ -80,26 +92,52 @@ def create_job(payload: JobCreate, employer_id: UUID, db: Session = Depends(get_
     db.add(job)
     db.commit()
     db.refresh(job)
+    audit_log(
+        db,
+        "job_create",
+        actor_user_id=employer.user_id,
+        entity_type="job",
+        entity_id=str(job.id),
+        ip=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
+    )
     return job
 
 
 @router.delete("/{job_id}")
-def delete_job(job_id: UUID, db: Session = Depends(get_db)):
-    """Delete a job (employer only). Applications are removed too."""
-    job = db.query(Job).filter(Job.id == job_id).first()
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
-    db.query(Application).filter(Application.job_id == job_id).delete()
+def delete_job(
+    request: Request,
+    job: Job = Depends(require_job_owner),
+    db: Session = Depends(get_db),
+):
+    """Delete a job (employer only; must own job)."""
+    employer_id = job.employer_id
+    emp = db.query(Employer).filter(Employer.id == employer_id).first()
+    db.query(Application).filter(Application.job_id == job.id).delete()
     db.delete(job)
     db.commit()
+    if emp:
+        audit_log(
+            db,
+            "job_delete",
+            actor_user_id=emp.user_id,
+            entity_type="job",
+            entity_id=str(job.id),
+            ip=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+        )
     return {"status": "ok"}
 
 
 @router.patch("/{job_id}", response_model=JobResponse)
-def update_job(job_id: UUID, payload: JobUpdate, db: Session = Depends(get_db)):
-    job = db.query(Job).filter(Job.id == job_id).first()
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
+def update_job(
+    payload: JobUpdate,
+    request: Request,
+    job: Job = Depends(require_job_owner),
+    db: Session = Depends(get_db),
+):
+    """Update job (employer only; must own job)."""
+    emp = db.query(Employer).filter(Employer.id == job.employer_id).first()
     if payload.title is not None:
         job.title = payload.title
     if payload.description is not None:
@@ -112,4 +150,14 @@ def update_job(job_id: UUID, payload: JobUpdate, db: Session = Depends(get_db)):
         job.remote = payload.remote
     db.commit()
     db.refresh(job)
+    if emp:
+        audit_log(
+            db,
+            "job_update",
+            actor_user_id=emp.user_id,
+            entity_type="job",
+            entity_id=str(job.id),
+            ip=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+        )
     return job

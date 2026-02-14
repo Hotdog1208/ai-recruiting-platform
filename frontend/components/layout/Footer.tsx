@@ -2,54 +2,70 @@ import Link from "next/link";
 
 export function Footer() {
   return (
-    <footer className="bg-[#0a0a0a] border-t border-white/5">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
-        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-5">
-          <div className="lg:col-span-2">
-            <p className="text-white font-bold text-lg mb-4">Recruiter<span className="text-teal-400">.Solutions</span></p>
-            <p className="text-zinc-400 text-sm leading-relaxed max-w-xs">
-              AI-powered recruiting that connects the right talent with the right opportunities. Indeed on steroids.
+    <footer className="relative border-t border-[var(--border)] bg-[var(--bg-secondary)] overflow-hidden">
+      {/* Accent gradient strip */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[var(--accent-primary)] to-transparent opacity-60" aria-hidden />
+
+      <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-20">
+        {/* Final CTA block */}
+        <div className="glass-card relative p-10 sm:p-14 mb-20 text-center">
+          <h3 className="font-display text-[clamp(1.5rem, 3vw, 2.25rem)] font-bold text-white tracking-tight mb-4" style={{ letterSpacing: "-0.02em" }}>
+            Start your next chapter today
+          </h3>
+          <p className="text-[var(--text-secondary)] text-[1.125rem] max-w-xl mx-auto mb-8" style={{ lineHeight: 1.7 }}>
+            Join candidates and employers who find the right fit faster.
+          </p>
+          <div className="flex flex-wrap gap-4 justify-center">
+            <Link href="/signup/candidate" className="btn-primary btn-magnetic shine-hover inline-flex">
+              I&apos;m a candidate
+            </Link>
+            <Link href="/signup/employer" className="btn-ghost shine-hover inline-flex">
+              I&apos;m an employer
+            </Link>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-14 md:gap-20 items-start">
+          <div className="col-span-2 md:col-span-1">
+            <p className="font-display font-bold text-white text-[1.25rem] tracking-tight mb-5">
+              Recruiter<span className="text-[var(--accent-primary)]">.</span>Solutions
+            </p>
+            <p className="text-[1rem] text-[var(--text-secondary)] leading-relaxed max-w-[280px]" style={{ lineHeight: 1.7 }}>
+              Where talent meets opportunity. AI-powered matching, one platform.
             </p>
           </div>
           <div>
-            <p className="text-white font-semibold mb-4">For Candidates</p>
-            <ul className="space-y-3 text-sm text-zinc-400">
-              <li><Link href="/jobs" className="hover:text-teal-400 transition-colors">Browse Jobs</Link></li>
-              <li><Link href="/signup/candidate" className="hover:text-teal-400 transition-colors">Create Account</Link></li>
-              <li><Link href="/login" className="hover:text-teal-400 transition-colors">Log in</Link></li>
-              <li><Link href="/dashboard/candidate" className="hover:text-teal-400 transition-colors">Dashboard</Link></li>
+            <p className="font-display text-[11px] uppercase tracking-[0.25em] text-[var(--text-secondary)] mb-5 font-semibold">
+              Candidates
+            </p>
+            <ul className="space-y-4 text-[1rem]">
+              <li><Link href="/jobs" className="text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors link-underline duration-300">Browse jobs</Link></li>
+              <li><Link href="/signup/candidate" className="text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors link-underline duration-300">Sign up</Link></li>
+              <li><Link href="/dashboard/candidate" className="text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors link-underline duration-300">Dashboard</Link></li>
             </ul>
           </div>
           <div>
-            <p className="text-white font-semibold mb-4">For Employers</p>
-            <ul className="space-y-3 text-sm text-zinc-400">
-              <li><Link href="/signup/employer" className="hover:text-teal-400 transition-colors">Post a Job</Link></li>
-              <li><Link href="/login" className="hover:text-teal-400 transition-colors">Log in</Link></li>
-              <li><Link href="/dashboard/employer" className="hover:text-teal-400 transition-colors">Dashboard</Link></li>
-              <li><Link href="/dashboard/employer/market" className="hover:text-teal-400 transition-colors">Market Data</Link></li>
-            </ul>
-          </div>
-          <div>
-            <p className="text-white font-semibold mb-4">Resources</p>
-            <ul className="space-y-3 text-sm text-zinc-400">
-              <li><Link href="/how-it-works" className="hover:text-teal-400 transition-colors">How it works</Link></li>
-              <li><Link href="/pricing" className="hover:text-teal-400 transition-colors">Pricing</Link></li>
-              <li><Link href="/about" className="hover:text-teal-400 transition-colors">About</Link></li>
-              <li><Link href="/faq" className="hover:text-teal-400 transition-colors">FAQ</Link></li>
-              <li><Link href="/contact" className="hover:text-teal-400 transition-colors">Contact</Link></li>
-              <li><Link href="/terms" className="hover:text-teal-400 transition-colors">Terms</Link></li>
-              <li><Link href="/privacy" className="hover:text-teal-400 transition-colors">Privacy</Link></li>
-              <li><Link href="/ai-disclosure" className="hover:text-teal-400 transition-colors">AI disclosure</Link></li>
-              <li><Link href="/status" className="hover:text-teal-400 transition-colors">Status</Link></li>
+            <p className="font-display text-[11px] uppercase tracking-[0.25em] text-[var(--text-secondary)] mb-5 font-semibold">
+              Employers
+            </p>
+            <ul className="space-y-4 text-[1rem]">
+              <li><Link href="/signup/employer" className="text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors link-underline duration-300">Post a job</Link></li>
+              <li><Link href="/dashboard/employer" className="text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors link-underline duration-300">Dashboard</Link></li>
+              <li><Link href="/pricing" className="text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors link-underline duration-300">Pricing</Link></li>
             </ul>
           </div>
         </div>
-        <div className="mt-16 pt-8 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-zinc-500 text-sm">© {new Date().getFullYear()} Recruiter.Solutions. All rights reserved.</p>
-          <div className="flex gap-6 text-sm text-zinc-500">
-            <span>AI-Powered</span>
-            <span>Bias-Mitigated</span>
-            <span>Built for Scale</span>
+
+        <div className="mt-20 pt-10 border-t border-[var(--border)] flex flex-col sm:flex-row justify-between items-center gap-6">
+          <p className="text-xs text-[var(--text-secondary)] uppercase tracking-widest">
+            © {new Date().getFullYear()} Recruiter.Solutions
+          </p>
+          <div className="flex flex-wrap gap-8 text-xs text-[var(--text-secondary)] uppercase tracking-widest">
+            <Link href="/terms" className="hover:text-[var(--accent-primary)] transition-colors duration-200">Terms</Link>
+            <Link href="/privacy" className="hover:text-[var(--accent-primary)] transition-colors duration-200">Privacy</Link>
+            <Link href="/cookies" className="hover:text-[var(--accent-primary)] transition-colors duration-200">Cookies</Link>
+            <Link href="/acceptable-use" className="hover:text-[var(--accent-primary)] transition-colors duration-200">Acceptable use</Link>
+            <Link href="/contact" className="hover:text-[var(--accent-primary)] transition-colors duration-200">Contact</Link>
           </div>
         </div>
       </div>

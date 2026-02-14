@@ -34,6 +34,11 @@ export default function SettingsPage() {
     }
     setSaving(true);
     try {
+      if (!supabase) {
+        setError("Auth is not configured");
+        setSaving(false);
+        return;
+      }
       const { error: err } = await supabase.auth.updateUser({ password });
       if (err) {
         setError(err.message);

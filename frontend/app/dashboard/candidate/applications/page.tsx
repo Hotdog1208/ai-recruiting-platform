@@ -17,18 +17,18 @@ type Application = {
 };
 
 export default function MyApplicationsPage() {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<{ id: string } | null>(null);
 
   useEffect(() => {
     async function load() {
       if (!user) return;
       try {
-        const profileRes = await apiGet<{ id: string }>(`/candidates/by-user/${user.id}`);
-        setProfile(profileRes);
-        const apps = await apiGet<Application[]>(`/applications/by-candidate/${profileRes.id}`);
+        const apps = await apiGet<Application[]>(
+          "/applications/by-candidate/me",
+          session?.access_token
+        );
         setApplications(apps);
       } catch {
         setApplications([]);
@@ -37,7 +37,7 @@ export default function MyApplicationsPage() {
       }
     }
     load();
-  }, [user?.id]);
+  }, [user, session?.access_token]);
 
   const statusColor = (s: string) => {
     switch (s) {

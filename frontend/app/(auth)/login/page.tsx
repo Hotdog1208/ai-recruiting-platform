@@ -27,6 +27,10 @@ function LoginForm() {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    if (!supabase) {
+      setError("Auth is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local");
+      return;
+    }
     setSubmitting(true);
     try {
       const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
@@ -48,9 +52,9 @@ function LoginForm() {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
         <div className="flex gap-2">
-          <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-          <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-          <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+          <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: "0ms" }} />
+          <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: "150ms" }} />
+          <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: "300ms" }} />
         </div>
       </div>
     );
@@ -58,12 +62,12 @@ function LoginForm() {
 
   return (
     <div className="w-full max-w-md">
-      <div className="bg-[#1a1a1a] rounded-2xl border border-white/10 p-8">
-        <h1 className="text-2xl font-bold text-white mb-1">Welcome back</h1>
-        <p className="text-zinc-400 mb-8">Log in to continue to Recruiter.Solutions</p>
+      <div className="card-sharp p-8 border-[var(--border)] bg-[var(--bg-card)]">
+        <h1 className="font-display text-display-sm text-[1.5rem] text-white mb-1 tracking-tight">Welcome back</h1>
+        <p className="text-[var(--text-muted)] text-[15px] mb-8">Log in to continue to Recruiter.Solutions</p>
 
         {resetSuccess && (
-          <div className="p-3 bg-teal-500/20 text-teal-400 rounded-lg text-sm mb-5">
+          <div className="p-3 bg-[var(--accent-dim)] text-[var(--accent)] rounded-[var(--radius-md)] text-[13px] mb-5 border border-[var(--accent)]/20">
             Password updated successfully. You can now log in.
           </div>
         )}
@@ -73,21 +77,21 @@ function LoginForm() {
           <Input label="Password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
 
           <div className="flex justify-end">
-            <Link href="/forgot-password" className="text-sm text-teal-400 hover:text-teal-300 font-medium">
+            <Link href="/forgot-password" className="text-sm text-[var(--accent)] hover:text-[var(--accent-hover)] font-medium link-underline">
               Forgot password?
             </Link>
           </div>
 
-          {error && <div className="p-3 bg-red-500/20 text-red-400 rounded-lg text-sm">{error}</div>}
+          {error && <div className="p-3 bg-red-500/20 text-red-400 rounded-[var(--radius-md)] text-[13px]">{error}</div>}
 
           <Button type="submit" className="w-full" size="lg" isLoading={submitting} disabled={submitting}>
             Sign in
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-zinc-400 text-sm">
+        <p className="mt-6 text-center text-[var(--text-muted)] text-sm">
           Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-teal-400 hover:text-teal-300 font-medium">
+          <Link href="/signup" className="text-[var(--accent)] hover:text-[var(--accent-hover)] font-medium link-underline">
             Sign up
           </Link>
         </p>
@@ -101,9 +105,9 @@ export default function LoginPage() {
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-[40vh]">
         <div className="flex gap-2">
-          <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-          <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-          <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+          <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: "0ms" }} />
+          <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: "150ms" }} />
+          <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: "300ms" }} />
         </div>
       </div>
     }>

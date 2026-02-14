@@ -25,7 +25,7 @@ export default function TermsPage() {
         </section>
         <section>
           <h2 className="text-lg font-semibold text-white">5. AI and matching</h2>
-          <p>Our AI assists with resume parsing and job matching. Match scores are recommendations only; hiring decisions are made by humans. See our <Link href="/ai-disclosure" className="text-teal-400 hover:text-teal-300">AI disclosure</Link> for details.</p>
+          <p>Our AI assists with resume parsing and job matching. Match scores are recommendations only; hiring decisions are made by humans. See our <Link href="/ai-disclaimer" className="text-teal-400 hover:text-teal-300">AI disclosure</Link> for details.</p>
         </section>
         <section>
           <h2 className="text-lg font-semibold text-white">6. Intellectual property</h2>
