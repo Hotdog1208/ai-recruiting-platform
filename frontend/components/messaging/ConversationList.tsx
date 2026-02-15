@@ -12,7 +12,7 @@ type Props = {
 };
 
 export function ConversationList({ conversations, selectedId, onSelect, loading }: Props) {
-  const { role } = useAuth();
+  useAuth();
 
   if (loading) {
     return (

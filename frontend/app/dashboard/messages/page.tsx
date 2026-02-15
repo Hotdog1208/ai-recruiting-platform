@@ -36,15 +36,15 @@ export default function MessagesPage() {
   }, [token]);
 
   useEffect(() => {
-    loadConversations();
+    queueMicrotask(() => loadConversations());
   }, [loadConversations]);
 
   useEffect(() => {
     if (!withUserId || !token) {
-      if (!withUserId) setSelectedConversation(null);
+      if (!withUserId) queueMicrotask(() => setSelectedConversation(null));
       return;
     }
-    setLoadingConv(true);
+    queueMicrotask(() => setLoadingConv(true));
     getOrCreateConversation(withUserId, token)
       .then((conv) => {
         setSelectedConversation(conv);

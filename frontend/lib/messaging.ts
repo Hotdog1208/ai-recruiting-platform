@@ -1,4 +1,4 @@
-import { api, apiGet, apiPost, apiPatch } from "@/lib/api";
+import { apiGet, apiPost, apiPatch } from "@/lib/api";
 
 export type Message = {
   id: string;

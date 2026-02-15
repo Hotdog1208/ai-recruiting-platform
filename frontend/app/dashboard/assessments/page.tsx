@@ -16,11 +16,21 @@ export default function AssessmentsPage() {
   const [takingId, setTakingId] = useState<string | null>(null);
 
   useEffect(() => {
-    listAssessments().then(setAssessments).catch(() => setAssessments([]));
-    if (token) {
-      myAssessmentResults(token).then(setMyResults).catch(() => setMyResults([]));
-    }
-    setLoading(false);
+    let cancelled = false;
+    const load = async () => {
+      const [assessmentsRes, resultsRes] = await Promise.all([
+        listAssessments().catch(() => []),
+        token ? myAssessmentResults(token).catch(() => []) : Promise.resolve([]),
+      ]);
+      if (cancelled) return;
+      setAssessments(Array.isArray(assessmentsRes) ? assessmentsRes : []);
+      setMyResults(Array.isArray(resultsRes) ? resultsRes : []);
+      setLoading(false);
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [token]);
 
   const getResult = (assessmentId: string) => myResults.find((r) => r.assessment_id === assessmentId);

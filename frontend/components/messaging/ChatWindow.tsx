@@ -23,8 +23,6 @@ export function ChatWindow({ conversation, onSent }: Props) {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [input, setInput] = useState("");
-  const [pollInterval, setPollInterval] = useState<ReturnType<typeof setInterval> | null>(null);
-
   const load = useCallback(() => {
     if (!token || !conversation.id) return;
     setLoading(true);
@@ -40,11 +38,7 @@ export function ChatWindow({ conversation, onSent }: Props) {
   useEffect(() => {
     if (!token || !conversation.id) return;
     const id = setInterval(load, 4000);
-    setPollInterval(id);
-    return () => {
-      clearInterval(id);
-      setPollInterval(null);
-    };
+    return () => clearInterval(id);
   }, [load, token, conversation.id]);
 
   const handleSend = async () => {

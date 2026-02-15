@@ -61,13 +61,6 @@ type Applicant = {
   created_at: string | null;
 };
 
-function getTimeOfDay(): string {
-  const h = new Date().getHours();
-  if (h < 12) return "morning";
-  if (h < 17) return "afternoon";
-  return "evening";
-}
-
 function formatTimeAgo(dateStr: string | null): string {
   if (!dateStr) return "—";
   const d = new Date(dateStr);
@@ -160,7 +153,6 @@ function StatCard({
 }
 
 function PipelineStage({
-  stage,
   icon,
   title,
   count,
@@ -244,7 +236,7 @@ function FunnelChart({
   const max = Math.max(...stages.map((s) => s.count), 1);
   return (
     <div className="funnel-chart">
-      {stages.map((s, i) => (
+      {stages.map((s) => (
         <div key={s.name} className="funnel-stage">
           <span className="funnel-label">{s.name}</span>
           <div className="funnel-bar-wrap">

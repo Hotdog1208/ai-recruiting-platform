@@ -149,7 +149,6 @@ function StatCard({
 }
 
 function StatusCard({
-  status,
   count,
   icon,
   label,
@@ -176,7 +175,6 @@ function StatusCard({
 }
 
 function RecommendationCard({
-  type,
   icon,
   title,
   description,

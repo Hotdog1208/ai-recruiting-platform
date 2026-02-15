@@ -42,7 +42,7 @@ export function VideoRecorder({ onUpload, onCancel }: Props) {
           setRecording(false);
         }
       }, MAX_DURATION_MS);
-    } catch (e) {
+    } catch {
       setError("Camera/microphone access is needed to record.");
     }
   }, []);
