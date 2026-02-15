@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 
@@ -31,12 +32,12 @@ export default function Error({
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Button onClick={reset}>Try again</Button>
-          <a
+          <Link
             href="/"
             className="px-5 py-2.5 rounded-xl border border-white/10 text-white font-medium hover:bg-white/5 transition-colors"
           >
             Go home
-          </a>
+          </Link>
         </div>
       </motion.div>
     </div>

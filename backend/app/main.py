@@ -4,13 +4,15 @@ from dotenv import load_dotenv
 _load_dotenv_path = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(_load_dotenv_path, override=False)
 
+from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi import HTTPException
+from fastapi.staticfiles import StaticFiles
 
-from app.api import auth, jobs, employers, candidates, users, applications, matching, external_jobs, saved_jobs, webhooks, billing
+from app.api import auth, jobs, employers, candidates, users, applications, matching, external_jobs, saved_jobs, webhooks, billing, messaging, assessments, interview
 from app.core.config import get_settings
 from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
@@ -42,6 +44,56 @@ def validation_error_handler(_request: Request, exc: RequestValidationError):
     )
 
 
+def _validate_critical_config() -> None:
+    """Run on startup: verify DB and JWT, log optional services. Exit 1 if critical config invalid."""
+    import sys
+    from sqlalchemy import create_engine, text
+
+    try:
+        _s = get_settings()
+    except Exception as e:
+        print(f"\n\u274c Critical configuration failed: {e}\n")
+        sys.exit(1)
+
+    errors: list[str] = []
+
+    # Database reachable
+    try:
+        url = str(_s.DATABASE_URL)
+        if url.startswith("postgres://"):
+            url = "postgresql://" + url[11:]
+        engine = create_engine(url)
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        print("\u2705 Database connection: OK")
+    except Exception as e:
+        errors.append(f"Database: {e!s}")
+
+    # JWT secret
+    if not _s.SUPABASE_JWT_SECRET or len(_s.SUPABASE_JWT_SECRET) < 32:
+        errors.append("SUPABASE_JWT_SECRET missing or too short")
+    else:
+        print("\u2705 SUPABASE_JWT_SECRET: OK")
+
+    if errors:
+        print("\n\u274c Fix backend/.env and restart:")
+        for err in errors:
+            print(f"  \u2022 {err}")
+        print()
+        sys.exit(1)
+
+    # Optional
+    if not _s.OPENAI_API_KEY or _s.OPENAI_API_KEY.strip().startswith(("your_", "paste_", "sk-placeholder")):
+        print("\u26a0\ufe0f OPENAI_API_KEY not set or placeholder \u2014 resume parsing uses fallback")
+    else:
+        print("\u2705 OPENAI_API_KEY: set")
+    if not _s.STRIPE_SECRET_KEY:
+        print("\u26a0\ufe0f Stripe not configured \u2014 payments disabled")
+    else:
+        print("\u2705 Stripe: configured")
+    print()
+
+
 _settings = get_settings()
 app.add_middleware(
     CORSMiddleware,
@@ -50,6 +102,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.on_event("startup")
+def _startup_validate() -> None:
+    _validate_critical_config()
 
 app.include_router(auth.router)
 app.include_router(jobs.router)
@@ -62,6 +119,15 @@ app.include_router(external_jobs.router)
 app.include_router(saved_jobs.router)
 app.include_router(webhooks.router)
 app.include_router(billing.router)
+app.include_router(messaging.router)
+app.include_router(assessments.router)
+app.include_router(interview.router)
+
+
+# Optional: serve uploaded candidate videos (backend/uploads/videos/)
+_uploads_dir = Path(__file__).resolve().parent.parent / "uploads"
+if _uploads_dir.exists():
+    app.mount("/uploads", StaticFiles(directory=str(_uploads_dir)), name="uploads")
 
 
 @app.get("/health")

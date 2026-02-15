@@ -39,6 +39,7 @@ No upfront payment is required for Adzuna or for JSearch’s free tier.
 |--------|---------|----------------------|------|
 | Resume parsing | `OPENAI_API_KEY` | Fallback to basic extraction (no AI) | **Pay-per-use** (you need an OpenAI account and usage-based billing) |
 | Job match scores | `OPENAI_API_KEY` | All matches show 50% and “AI matching not configured” | Same as above |
+| Interview prep (generate questions, evaluate answers) | `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` | Fallback to fixed question list; no AI feedback | Same as above (uses `AI_PROVIDER`: openai \| anthropic) |
 
 So:
 

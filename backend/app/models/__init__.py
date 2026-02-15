@@ -11,3 +11,5 @@ from .plan import Plan
 from .subscription import Subscription
 from .usage_counter import UsageCounter
 from .audit_log import AuditLog
+from .conversation import Conversation, Message
+from .assessment import Assessment, AssessmentResult

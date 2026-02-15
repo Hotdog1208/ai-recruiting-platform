@@ -8,6 +8,8 @@ import { apiGet, apiPatch, apiUpload } from "@/lib/api";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { countries, getStates, getCities, WORK_PREFERENCES, WORK_TYPES } from "@/lib/location";
+import { VideoPlayer } from "@/components/profile/VideoPlayer";
+import { VideoRecorder } from "@/components/profile/VideoRecorder";
 
 type CandidateProfile = {
   id: string;
@@ -25,6 +27,7 @@ type CandidateProfile = {
   education: unknown[] | null;
   experience: unknown[] | null;
   skills: string[] | null;
+  video_url?: string | null;
   resume_parsed_data?: unknown;
 };
 
@@ -51,6 +54,7 @@ export default function CandidateProfilePage() {
   const [resumeUploading, setResumeUploading] = useState(false);
   const [resumeError, setResumeError] = useState("");
   const [resumeWarning, setResumeWarning] = useState("");
+  const [showVideoRecorder, setShowVideoRecorder] = useState(false);
 
   const states = country ? getStates(country) : [];
   const cities = country && state ? getCities(country, state) : [];
@@ -178,6 +182,37 @@ export default function CandidateProfilePage() {
           {profile?.resume_parsed_data ? (
             <p className="mt-2 text-sm text-teal-400">✓ Resume parsed successfully</p>
           ) : null}
+        </div>
+
+        <div className="bg-[#1a1a1a] rounded-2xl border border-white/5 p-8 mb-8">
+          <h2 className="font-semibold text-white mb-2">Intro video</h2>
+          <p className="text-zinc-400 text-sm mb-4">
+            Record a short video (up to 60s) so employers can see your personality. WebM or MP4.
+          </p>
+          {showVideoRecorder ? (
+            <VideoRecorder
+              onUpload={async (blob) => {
+                if (!session?.access_token) throw new Error("Please log in again.");
+                const file = new File([blob], "intro.webm", { type: blob.type || "video/webm" });
+                await apiUpload<{ video_url: string }>(`/candidates/me/video`, file, session.access_token);
+                const p = await apiGet<CandidateProfile>(`/candidates/by-user/${user!.id}`, session.access_token);
+                setProfile(p);
+                setShowVideoRecorder(false);
+              }}
+              onCancel={() => setShowVideoRecorder(false)}
+            />
+          ) : profile?.video_url ? (
+            <div>
+              <VideoPlayer videoUrl={profile.video_url} />
+              <Button type="button" variant="ghost" className="mt-2" onClick={() => setShowVideoRecorder(true)}>
+                Replace video
+              </Button>
+            </div>
+          ) : (
+            <Button type="button" variant="outline" onClick={() => setShowVideoRecorder(true)}>
+              Record intro video
+            </Button>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="bg-[#1a1a1a] rounded-2xl border border-white/5 p-8 space-y-6">

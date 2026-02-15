@@ -17,22 +17,28 @@ import {
   Menu,
   X,
   LogOut,
+  MessageCircle,
+  Award,
+  Mic,
 } from "lucide-react";
 
 const candidateNav = [
   { href: "/dashboard/candidate", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/jobs", label: "Jobs", icon: Briefcase },
-  { href: "/dashboard/candidate/applications", label: "Applications", icon: FileText },
-  { href: "/profile/candidate", label: "Profile", icon: User },
-  { href: "/dashboard/candidate/saved", label: "Saved", icon: FileText },
+  { href: "/jobs", label: "Find jobs", icon: Briefcase },
+  { href: "/dashboard/candidate/applications", label: "My applications", icon: FileText },
+  { href: "/dashboard/messages", label: "Messages", icon: MessageCircle },
+  { href: "/dashboard/assessments", label: "Assessments", icon: Award },
+  { href: "/dashboard/interview-prep", label: "Interview prep", icon: Mic },
+  { href: "/profile/candidate", label: "My profile", icon: User },
+  { href: "/dashboard/candidate/saved", label: "Saved jobs", icon: FileText },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 const employerNav = [
   { href: "/dashboard/employer", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/jobs", label: "Jobs", icon: Briefcase },
-  { href: "/dashboard/employer/market", label: "Applicants", icon: FileText },
-  { href: "/profile/employer", label: "Company", icon: Building2 },
+  { href: "/dashboard/employer/market", label: "Candidates", icon: FileText },
+  { href: "/dashboard/messages", label: "Messages", icon: MessageCircle },
+  { href: "/profile/employer", label: "Company profile", icon: Building2 },
   { href: "/dashboard/employer/billing", label: "Billing", icon: CreditCard },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
@@ -74,14 +80,26 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   const nav = role === "candidate" ? candidateNav : employerNav;
+  const isEmployer = role === "employer";
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)] flex">
+    <div
+      className={cn(
+        "min-h-screen flex",
+        isEmployer
+          ? "employer-layout bg-[#0f0f1e]"
+          : "candidate-layout bg-[var(--bg-primary)]"
+      )}
+      data-theme={isEmployer ? "employer" : "candidate"}
+    >
       {/* Sidebar - desktop */}
       <aside
         className={cn(
           "hidden lg:flex lg:flex-col lg:w-56 lg:fixed lg:inset-y-0 lg:z-40",
-          "bg-[var(--bg-secondary)] border-r border-[var(--border)]"
+          "bg-[var(--bg-secondary)] border-r",
+          isEmployer
+            ? "employer-sidebar border-[rgba(59,130,246,0.2)]"
+            : "candidate-sidebar border-[rgba(0,230,118,0.2)]"
         )}
       >
         <div className="flex h-16 items-center px-4 border-b border-[var(--border)]">
@@ -91,7 +109,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
         <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
           {nav.map((item) => {
-            const isActive = pathname === item.href || (item.href !== "/jobs" && pathname?.startsWith(item.href + "/"));
+            const exactOnly = item.href === "/dashboard/employer" || item.href === "/dashboard/candidate";
+            const isActive = exactOnly ? pathname === item.href : (pathname === item.href || pathname?.startsWith(item.href + "/"));
             return (
               <Link
                 key={item.href}
@@ -99,7 +118,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-[var(--accent-dim)] text-[var(--accent)]"
+                    ? isEmployer
+                      ? "bg-[rgba(59,130,246,0.15)] text-[#3b82f6]"
+                      : "bg-[var(--accent-dim)] text-[var(--accent)]"
                     : "text-[var(--text-muted)] hover:text-white hover:bg-white/5"
                 )}
               >
@@ -143,7 +164,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
         <nav className="p-3 space-y-0.5">
           {nav.map((item) => {
-            const isActive = pathname === item.href || (item.href !== "/jobs" && pathname?.startsWith(item.href + "/"));
+            const exactOnly = item.href === "/dashboard/employer" || item.href === "/dashboard/candidate";
+            const isActive = exactOnly ? pathname === item.href : (pathname === item.href || (pathname?.startsWith(item.href + "/")));
             return (
               <Link
                 key={item.href}
@@ -151,7 +173,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 onClick={() => setSidebarOpen(false)}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                  isActive ? "bg-[var(--accent-dim)] text-[var(--accent)]" : "text-[var(--text-muted)] hover:text-white hover:bg-white/5"
+                  isActive
+                    ? isEmployer
+                      ? "bg-[rgba(59,130,246,0.15)] text-[#3b82f6]"
+                      : "bg-[var(--accent-dim)] text-[var(--accent)]"
+                    : "text-[var(--text-muted)] hover:text-white hover:bg-white/5"
                 )}
               >
                 <item.icon className="h-5 w-5 shrink-0" />
@@ -182,12 +208,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <Menu className="h-6 w-6" />
           </button>
           <div className="flex-1" />
-          <span className="text-[var(--text-dim)] text-sm capitalize hidden sm:inline">{role}</span>
+          <span className="text-[var(--text-dim)] text-sm hidden sm:inline">
+            {role === "employer" ? "Recruiter" : "Job seeker"}
+          </span>
           <Link
             href={role === "employer" ? "/profile/employer" : "/profile/candidate"}
             className="text-sm font-medium text-[var(--text-muted)] hover:text-white transition-colors"
           >
-            Profile
+            {role === "employer" ? "Company profile" : "My profile"}
           </Link>
           <button
             type="button"

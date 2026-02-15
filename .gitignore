@@ -1,3 +1,6 @@
+# Uploaded files (candidate videos)
+backend/uploads/
+
 # Dependencies and build artifacts
 **/node_modules/
 *.zip

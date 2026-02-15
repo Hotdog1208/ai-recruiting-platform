@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/Card";
 type Applicant = {
   id: string;
   candidate_id: string;
+  candidate_user_id?: string | null;
   candidate_name: string | null;
   candidate_location: string | null;
   candidate_skills: string[] | null;
@@ -137,6 +138,14 @@ export default function JobApplicantsPage() {
                     )}
                   </div>
                   <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+                    {a.candidate_user_id && (
+                      <Link
+                        href={`/dashboard/messages?with=${a.candidate_user_id}`}
+                        className="px-3 py-1.5 rounded-lg text-sm font-medium border border-teal-500/50 text-teal-400 hover:bg-teal-500/10"
+                      >
+                        Message
+                      </Link>
+                    )}
                     <select
                       value={a.status}
                       onChange={(e) => handleStatusChange(a.id, e.target.value)}

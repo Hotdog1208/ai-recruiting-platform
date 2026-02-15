@@ -8,8 +8,9 @@ export function EnvBanner() {
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    setStatus(getEnvStatus());
+    const id = setTimeout(() => setStatus(getEnvStatus()), 0);
     logDevEnvWarnings();
+    return () => clearTimeout(id);
   }, []);
 
   if (status !== "missing_supabase" || dismissed) return null;

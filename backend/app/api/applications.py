@@ -45,6 +45,7 @@ def list_applications_by_job(
         result.append({
             "id": str(a.id),
             "candidate_id": str(a.candidate_id),
+            "candidate_user_id": str(c.user_id) if c else None,
             "candidate_name": c.full_name if c else None,
             "candidate_location": c.location if c else None,
             "candidate_skills": c.skills if c else [],

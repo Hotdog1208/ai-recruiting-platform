@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 
@@ -24,19 +23,10 @@ export function Navbar() {
   };
 
   return (
-    <motion.nav
-      className={`navbar nav-pill fixed top-6 left-1/2 -translate-x-1/2 z-[1000] w-[calc(100%-2rem)] max-w-5xl rounded-full transition-all duration-300 ${scrolled ? "scrolled" : ""}`}
-      initial={false}
-      animate={{
-        backgroundColor: scrolled ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)",
-        backdropFilter: "blur(24px) saturate(180%)",
-        boxShadow: scrolled
-          ? "0 0 0 1px rgba(255,255,255,0.08), 0 8px 32px rgba(0,0,0,0.24)"
-          : "0 0 0 1px rgba(255,255,255,0.06)",
-      }}
-      transition={{ duration: 0.3 }}
+    <header
+      className={`navbar ${scrolled ? "scrolled" : ""}`}
     >
-      <div className="navbar-container flex items-center justify-between h-full px-5 sm:px-8 py-3">
+      <div className="navbar-container">
         <Link
           href="/"
           className="navbar-logo font-display font-bold text-[17px] text-white tracking-tight hover:text-[var(--accent-primary)] transition-colors duration-200 shrink-0"
@@ -81,6 +71,6 @@ export function Navbar() {
         )}
         </div>
       </div>
-    </motion.nav>
+    </header>
   );
 }

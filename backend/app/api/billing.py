@@ -14,8 +14,8 @@ router = APIRouter(prefix="/billing", tags=["billing"])
 
 
 class CheckoutSessionRequest(BaseModel):
-    success_url: str = "http://localhost:3000/dashboard/employer/billing?success=1"
-    cancel_url: str = "http://localhost:3000/dashboard/employer/billing?cancel=1"
+    success_url: str | None = None
+    cancel_url: str | None = None
 
 
 @router.post("/checkout-session")
@@ -33,7 +33,10 @@ def create_checkout_session(
     if not price_id:
         raise HTTPException(status_code=501, detail="No price configured for checkout")
 
+    base = settings.frontend_base_url
     req = body or CheckoutSessionRequest()
+    success_url = (req.success_url or "").strip() or f"{base.rstrip('/')}/dashboard/employer/billing?success=1"
+    cancel_url = (req.cancel_url or "").strip() or f"{base.rstrip('/')}/dashboard/employer/billing?cancel=1"
     try:
         import stripe
         stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -41,8 +44,8 @@ def create_checkout_session(
             mode="subscription",
             client_reference_id=str(employer.id),
             line_items=[{"price": price_id, "quantity": 1}],
-            success_url=req.success_url,
-            cancel_url=req.cancel_url,
+            success_url=success_url,
+            cancel_url=cancel_url,
         )
         return {"url": session.url, "session_id": session.id}
     except Exception as e:

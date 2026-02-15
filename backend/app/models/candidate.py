@@ -26,6 +26,7 @@ class Candidate(Base):
     skills = Column(JSON, nullable=True)
     preferences = Column(JSONB, nullable=True)  # job type, location prefs
     resume_url = Column(String, nullable=True)
+    video_url = Column(String, nullable=True)  # 30–60s intro video URL
     resume_text = Column(Text, nullable=True)
     resume_parsed_data = Column(JSON, nullable=True)  # parsed_profile
     created_at = Column(DateTime, default=datetime.utcnow)

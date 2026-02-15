@@ -1,3 +1,4 @@
+from pathlib import Path
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
@@ -33,6 +34,7 @@ def _candidate_response(candidate: Candidate):
         "experience": candidate.experience,
         "skills": candidate.skills,
         "resume_url": candidate.resume_url,
+        "video_url": getattr(candidate, "video_url", None),
         "resume_parsed_data": candidate.resume_parsed_data,
     }
 
@@ -87,12 +89,16 @@ def update_candidate_me(
         candidate.experience = payload.experience
     if payload.skills is not None:
         candidate.skills = payload.skills
+    if payload.video_url is not None:
+        candidate.video_url = payload.video_url
     db.commit()
     return {"status": "ok"}
 
 
 MAX_RESUME_BYTES = 10 * 1024 * 1024  # 10 MB
 ALLOWED_RESUME_EXTENSIONS = (".pdf", ".docx", ".doc", ".txt")
+MAX_VIDEO_BYTES = 50 * 1024 * 1024  # 50 MB for short intro video
+ALLOWED_VIDEO_TYPES = ("video/webm", "video/mp4", "video/quicktime")
 
 
 def _validate_resume_file(filename: str | None, content_size: int) -> None:
@@ -138,6 +144,32 @@ def upload_resume_me(
         candidate.resume_text = text
     db.commit()
     return {"status": "ok", "parsed": parsed, "warnings": warnings, "ai_used": ai_used}
+
+
+@router.post("/me/video")
+def upload_video_me(
+    file: UploadFile = File(...),
+    current: dict = Depends(require_candidate),
+    db: Session = Depends(get_db),
+):
+    """Upload a short intro video (30–60s). Saves to backend uploads folder and sets candidate.video_url."""
+    candidate = db.query(Candidate).filter(Candidate.user_id == current["user_id"]).first()
+    if not candidate:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+    content = file.file.read()
+    if len(content) > MAX_VIDEO_BYTES:
+        raise HTTPException(status_code=400, detail="Video too large (max 50MB)")
+    ct = (file.content_type or "").lower()
+    if ct not in ALLOWED_VIDEO_TYPES and not (file.filename or "").lower().endswith((".webm", ".mp4", ".mov")):
+        raise HTTPException(status_code=400, detail="Allowed: WebM, MP4")
+    uploads_root = Path(__file__).resolve().parent.parent.parent / "uploads" / "videos"
+    uploads_root.mkdir(parents=True, exist_ok=True)
+    ext = ".webm" if "webm" in ct else ".mp4" if "mp4" in ct or "quicktime" in ct else ".webm"
+    path = uploads_root / f"{candidate.id}{ext}"
+    path.write_bytes(content)
+    candidate.video_url = f"/uploads/videos/{candidate.id}{ext}"
+    db.commit()
+    return {"status": "ok", "video_url": candidate.video_url}
 
 
 @router.get("/by-user/{user_id}")
@@ -196,6 +228,8 @@ def update_candidate_by_user(
         candidate.experience = payload.experience
     if payload.skills is not None:
         candidate.skills = payload.skills
+    if payload.video_url is not None:
+        candidate.video_url = payload.video_url
     db.commit()
     return {"status": "ok"}
 

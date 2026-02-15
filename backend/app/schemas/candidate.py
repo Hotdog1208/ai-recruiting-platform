@@ -17,3 +17,4 @@ class CandidateUpdate(BaseModel):
     education: list[dict[str, Any]] | None = None
     experience: list[dict[str, Any]] | None = None
     skills: list[str] | None = None
+    video_url: str | None = None

@@ -56,11 +56,6 @@ const REQUIRED_ENV_VARS = [
   "NEXT_PUBLIC_SUPABASE_ANON_KEY",
 ] as const;
 
-const OPTIONAL_ENV_VARS = [
-  "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
-  "NEXT_PUBLIC_API_URL",
-] as const;
-
 /** Validate required env vars. Throws if any are missing (call at app init if you want hard fail). */
 export function validateEnv(): void {
   const missing = REQUIRED_ENV_VARS.filter(

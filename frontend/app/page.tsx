@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
@@ -67,6 +68,17 @@ export default function Home() {
   const router = useRouter();
   const [search, setSearch] = useState("");
 
+  useEffect(() => {
+    const observerOptions = { threshold: 0.15, rootMargin: "0px 0px -100px 0px" };
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) entry.target.classList.add("visible");
+      });
+    }, observerOptions);
+    document.querySelectorAll(".fade-in-section").forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (search.trim()) {
@@ -81,12 +93,16 @@ export default function Home() {
       <Navbar />
 
       <main className="flex-1">
-        {/* Hero: one viewport below nav, clear spacing so pill never overlaps text */}
+        {/* Hero: one viewport below nav, gradient orbs + noise */}
         <section className="relative min-h-[calc(100svh-6.25rem)] flex flex-col justify-center overflow-hidden hero-bg section-noise">
+          <div className="hero-orb hero-orb-1" aria-hidden />
+          <div className="hero-orb hero-orb-2" aria-hidden />
+          <div className="hero-orb hero-orb-3" aria-hidden />
+          <div className="noise-overlay-hero" aria-hidden />
           <div className="hero relative grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-12 lg:gap-20 items-center max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-10 lg:py-14 w-full">
             <div className="hero-content hero-content-wrap w-full max-w-2xl pl-0 lg:pl-8">
               <motion.p
-                className="hero-badge font-body text-[0.6875rem] uppercase tracking-[0.28em] text-[var(--accent-primary)] font-semibold mb-[var(--space-hero-gap)]"
+                className="hero-tag-badge hero-badge font-body"
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
@@ -102,7 +118,7 @@ export default function Home() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.65, delay: 0.15 + i * 0.1, ease: [0.16, 1, 0.3, 1] }}
                   >
-                    <span className={line.accent ? "text-[var(--accent-primary)]" : ""}>
+                    <span className={`block ${line.accent ? "text-[var(--accent-primary)]" : ""}`}>
                       {line.text}
                     </span>
                   </motion.span>
@@ -118,7 +134,7 @@ export default function Home() {
               </motion.p>
               <motion.form
                 onSubmit={handleSearch}
-                className="search-container flex flex-col sm:flex-row gap-3 max-w-xl mb-8"
+                className="search-container search-form flex flex-col sm:flex-row gap-3 max-w-xl mb-8"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
@@ -128,24 +144,24 @@ export default function Home() {
                   placeholder="Job title, keywords, or company"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="search-input flex-1 h-12 px-5 rounded-xl glass border border-[var(--border)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent-primary)]/50 focus:ring-2 focus:ring-[var(--accent-primary)]/20 transition-all text-[1rem]"
+                  className="search-input flex-1 px-5 rounded-xl border text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none transition-all text-[1rem]"
                 />
                 <MagneticButton strength={0.12} className="shrink-0">
-                  <button type="submit" className="search-button btn-primary btn-magnetic h-12 px-8 w-full sm:w-auto text-[0.9375rem]">
+                  <button type="submit" className="search-button btn-primary btn-magnetic px-8 w-full sm:w-auto text-[0.9375rem]">
                     Search jobs
                   </button>
                 </MagneticButton>
               </motion.form>
               <motion.div
-                className="hero-cta button-group flex flex-wrap gap-3"
+                className="hero-cta role-selector flex flex-wrap gap-3"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.65, ease: [0.16, 1, 0.3, 1] }}
               >
-                <Link href="/signup/candidate" className="btn-primary btn-magnetic shine-hover inline-flex items-center h-11 px-6 text-[0.9375rem]">
+                <Link href="/signup/candidate" className="role-button btn-primary btn-magnetic shine-hover">
                   I&apos;m a candidate
                 </Link>
-                <Link href="/signup/employer" className="btn-ghost shine-hover inline-flex items-center h-11 px-6 text-[0.9375rem]">
+                <Link href="/signup/employer" className="role-button btn-ghost shine-hover">
                   I&apos;m an employer
                 </Link>
               </motion.div>
@@ -157,8 +173,8 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
             >
-              <div className="w-full max-w-sm mx-auto">
-                <img src="/illustrations/hero.svg" alt="" className="w-full h-auto opacity-90" width={400} height={220} />
+              <div className="w-full max-w-sm mx-auto relative aspect-[400/220]">
+                <Image src="/illustrations/hero.svg" alt="" className="object-contain opacity-90" fill sizes="(max-width: 1024px) 400px, 400px" priority unoptimized />
               </div>
             </motion.div>
             <motion.div
@@ -169,17 +185,15 @@ export default function Home() {
             >
               <div className="absolute w-[400px] h-[400px] rounded-full bg-[var(--accent-primary)]/20 blur-[100px] animate-float" aria-hidden />
               <div className="absolute w-[280px] h-[280px] rounded-full bg-[var(--accent-secondary)]/10 blur-[80px] animate-float" style={{ animationDelay: "1.5s" }} aria-hidden />
-              <div className="relative z-10 w-full max-w-md">
-                <img src="/illustrations/hero.svg" alt="" className="w-full h-auto opacity-95 drop-shadow-2xl" width={480} height={280} />
+              <div className="relative z-10 w-full max-w-md aspect-[480/280]">
+                <Image src="/illustrations/hero.svg" alt="" className="object-contain opacity-95 drop-shadow-2xl" fill sizes="(min-width: 1024px) 480px, 0px" unoptimized />
               </div>
             </motion.div>
           </div>
-          {/* Scroll indicator */}
-          <div className="scroll-indicator absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
-            <span className="text-[11px] uppercase tracking-[0.2em] text-[var(--text-secondary)]">Scroll</span>
-            <svg className="w-6 h-6 text-[var(--accent-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
+          {/* Scroll indicator – animated arrow only */}
+          <div className="scroll-indicator" aria-hidden>
+            <span className="scroll-indicator-text">Scroll</span>
+            <div className="scroll-indicator-arrow" />
           </div>
         </section>
 
@@ -203,43 +217,42 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Stats */}
+        {/* Stats — label / value / description, no overlap */}
         <ScrollReveal amount={0.2}>
-          <section className="relative border-b border-[var(--border)] py-16 sm:py-20">
-            <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12">
-              <div className="stats-section grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-16 gap-y-12">
-                {[
-                  { value: "AI", label: "Smart matching", numeric: false },
-                  { value: 0, label: "Bias in filtering", numeric: true, suffix: "%" },
-                  { value: "1-Click", label: "Resume parsing", numeric: false },
-                  { value: "∞", label: "Job sources", numeric: false },
-                ].map((item, i) => (
-                  <motion.div
-                    key={item.label}
-                    className="stat-item group cursor-default"
-                    initial={{ opacity: 0, y: 24 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.3 }}
-                    transition={{ duration: 0.6, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
-                    whileHover={{ scale: 1.03 }}
-                  >
-                    <p className="stat-value font-display text-[2.5rem] sm:text-[3rem] font-bold text-white group-hover:text-[var(--accent-primary)] transition-colors duration-300 tracking-tight">
-                      {item.numeric && typeof item.value === "number" ? (
-                        <AnimatedCounter value={item.value} suffix={item.suffix} duration={1} />
-                      ) : (
-                        item.value
-                      )}
-                    </p>
-                    <p className="stat-label text-[1rem] text-[var(--text-secondary)] mt-2 font-medium">{item.label}</p>
-                  </motion.div>
-                ))}
-              </div>
+          <section className="stats-section fade-in-section relative border-b border-[var(--border)]">
+            <div className="stats-marquee max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-16 sm:py-20">
+              {[
+                { value: "AI", label: "Smart matching", desc: "Smart matching" },
+                { value: 0, label: "Zero bias", desc: "Bias in filtering", numeric: true, suffix: "%" },
+                { value: "1-Click", label: "One platform", desc: "Resume parsing" },
+                { value: "∞", label: "Trusted", desc: "Job sources" },
+              ].map((item, i) => (
+                <motion.div
+                  key={item.label}
+                  className="stat-item group cursor-default"
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ duration: 0.6, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                  whileHover={{ scale: 1.03 }}
+                >
+                  <p className="stat-label">{item.label}</p>
+                  <p className="stat-value font-display text-[2.5rem] sm:text-[3rem] font-bold text-white group-hover:text-[var(--accent-primary)] transition-colors duration-300 tracking-tight">
+                    {item.numeric && typeof item.value === "number" ? (
+                      <AnimatedCounter value={item.value} suffix={item.suffix} duration={1} />
+                    ) : (
+                      item.value
+                    )}
+                  </p>
+                  <p className="stat-description">{item.desc}</p>
+                </motion.div>
+              ))}
             </div>
           </section>
         </ScrollReveal>
 
         {/* How it works — glass cards */}
-        <section className="py-16 sm:py-24 px-6 sm:px-8 lg:px-12 border-b border-[var(--border)] section-noise relative">
+        <section className="how-it-works fade-in-section py-16 sm:py-24 px-6 sm:px-8 lg:px-12 border-b border-[var(--border)] section-noise relative">
           <div className="max-w-6xl mx-auto relative">
             <ScrollReveal delay={0.05}>
               <p className="font-display text-xs uppercase tracking-[0.25em] text-[var(--text-secondary)] mb-4 font-semibold">
@@ -252,25 +265,25 @@ export default function Home() {
                 No forms. No guesswork. Just upload, match, and apply.
               </p>
             </ScrollReveal>
-            <div className="cards-grid grid md:grid-cols-3 gap-6 md:gap-8 mb-16 items-stretch">
+            <div className="steps-grid cards-grid grid md:grid-cols-3 gap-6 md:gap-8 mb-16 items-stretch">
               {HOW_IT_WORKS.map((step, i) => (
                 <ScrollReveal key={step.step} delay={i * 0.1} amount={0.2}>
-                  <div className="card glass-card relative p-10 group h-full flex flex-col">
-                    <span className="font-display text-4xl font-bold text-[var(--accent-primary)]/30 tracking-tight">
+                  <div className="step-card card feature-card glass-card relative p-10 group h-full flex flex-col">
+                    <span className="step-number card-number font-display text-2xl">
                       {step.step}
                     </span>
-                    <h3 className="card-title font-display text-[1.5rem] font-semibold text-white mt-4 mb-3 tracking-tight">
+                    <h3 className="step-title card-title font-display text-[1.5rem] font-semibold text-white mt-4 mb-3 tracking-tight">
                       {step.title}
                     </h3>
-                    <p className="card-description text-[var(--text-secondary)] text-[1.0625rem] leading-relaxed">{step.desc}</p>
+                    <p className="step-description card-description text-[var(--text-secondary)] text-[1.0625rem] leading-relaxed">{step.desc}</p>
                   </div>
                 </ScrollReveal>
               ))}
             </div>
             <ScrollReveal amount={0.15}>
               <div className="glass-card relative p-8 sm:p-12 flex justify-center">
-                <div className="w-full max-w-md">
-                  <img src="/illustrations/hero.svg" alt="" className="w-full h-auto opacity-90" width={400} height={240} />
+                <div className="w-full max-w-md relative aspect-[400/240]">
+                  <Image src="/illustrations/hero.svg" alt="" className="object-contain opacity-90" fill sizes="400px" unoptimized />
                 </div>
               </div>
             </ScrollReveal>
@@ -324,7 +337,7 @@ export default function Home() {
                 { title: "Upload & parse", desc: "Drop your resume. AI extracts skills and experience in seconds. No forms.", icon: "doc" },
                 { title: "AI match score", desc: "Every job gets a fit score and explanation. See why you match before you apply.", icon: "bolt" },
                 { title: "One search, many sources", desc: "Platform jobs plus aggregated listings. Browse or get AI recommendations.", icon: "search" },
-              ].map((feature, i) => (
+              ].map((feature) => (
                 <motion.div key={feature.title} variants={fadeUp}>
                   <TiltCard maxTilt={6} className="group" glare>
                     <div className="glass-card relative p-10 h-full shine-hover">
@@ -381,21 +394,21 @@ export default function Home() {
           </div>
         </section>
 
-        {/* CTA — final punch */}
-        <section className="py-16 sm:py-24 px-6 sm:px-8 lg:px-12 hero-bg section-noise relative">
+        {/* CTA — centered, final punch */}
+        <section className="cta-section fade-in-section py-16 sm:py-24 px-6 sm:px-8 lg:px-12 hero-bg section-noise relative">
           <ScrollReveal amount={0.2}>
-            <div className="max-w-3xl mx-auto text-center">
-              <h2 className="section-heading font-display mb-6">
+            <div className="flex flex-col items-center w-full max-w-3xl mx-auto">
+              <h2 className="cta-title section-heading font-display">
                 Ready to find your fit?
               </h2>
-              <p className="text-[var(--text-secondary)] section-subtitle mx-auto mb-12" style={{ maxWidth: "38ch" }}>
+              <p className="cta-subtitle text-[var(--text-secondary)]">
                 Create a free account. Upload your resume. Get matched.
               </p>
-              <div className="flex flex-col sm:flex-row gap-5 justify-center">
-                <Link href="/signup" className="btn-primary btn-magnetic shine-hover inline-flex justify-center text-[1.0625rem]">
+              <div className="cta-buttons">
+                <Link href="/signup" className="cta-button-primary btn-primary btn-magnetic shine-hover">
                   Create free account
                 </Link>
-                <Link href="/jobs" className="btn-ghost link-underline inline-flex justify-center text-[1.0625rem]">
+                <Link href="/jobs" className="cta-button-secondary btn-ghost link-underline">
                   Browse jobs
                 </Link>
               </div>

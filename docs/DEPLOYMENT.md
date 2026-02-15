@@ -34,15 +34,15 @@
 2. Add secrets: `fly secrets set DATABASE_URL=... SUPABASE_JWT_SECRET=... OPENAI_API_KEY=...`
 3. Ensure `fly.toml` has internal port 8000 and health check `/health`.
 
-## CORS
+## CORS and domain (Recruiter.Solutions)
 
-Set `FRONTEND_ORIGIN` in backend to your deployed frontend URL, e.g.:
+Set `FRONTEND_ORIGIN` in backend to your deployed frontend URL. For **recruiter.solutions**:
 
 ```
-FRONTEND_ORIGIN=https://your-app.vercel.app
+FRONTEND_ORIGIN=https://recruiter.solutions,https://www.recruiter.solutions
 ```
 
-For multiple origins, use comma-separated list.
+The first origin is also used for Stripe checkout redirects. See **docs/RECRUITER_SOLUTIONS_DOMAIN.md** for full domain setup.
 
 ## Stripe Webhooks
 
