@@ -135,6 +135,45 @@ If your host runs migrations on deploy, ensure that step uses the production `DA
 
 ---
 
+## Diagnosis: Code vs Vercel vs GoDaddy
+
+Use this to see where the 404 comes from.
+
+| If this happens | Cause | What to check |
+|-----------------|--------|----------------|
+| **Deployment URL** (e.g. `https://ai-recruiting-platform-xxxx.vercel.app`) **also returns 404** | **Vercel / build** – deployment isn’t serving the app. | Root Directory = `frontend`, build logs (no failed step), and that this repo has `frontend/next.config.ts` with `turbopack.root` and `frontend/vercel.json` with `framework: "nextjs"` (see below). Redeploy after any config change. |
+| **Deployment URL works**, but **recruiter.solutions** returns 404 | **Vercel domain or GoDaddy DNS** – domain not pointing to the right deployment or DNS wrong. | In Vercel → **Settings** → **Domains**: both `recruiter.solutions` and `www.recruiter.solutions` must show **Valid Configuration** and be assigned to **Production**. In GoDaddy DNS: A for `@` → Vercel IP; CNAME for `www` → Vercel host (see section 2). Wait for DNS propagation; try in incognito. |
+| **Deployment URL works** and **Domains show Valid**, but **recruiter.solutions still 404** | **Caching or wrong project** | Hard refresh / different device / incognito. In Vercel, confirm the domain is on **this** project (ai-recruiting-platform), not another. |
+
+**Code/config that can fix Vercel 404 when the deployment URL also 404s:**
+
+- **Root Directory** in Vercel must be **`frontend`** (project is a monorepo; the app is in `frontend/`).
+- **`frontend/next.config.ts`** sets `turbopack.root` so Next.js uses the `frontend` folder as the app root (avoids wrong workspace when the repo has a root `package-lock.json`).
+- **`frontend/vercel.json`** sets `"framework": "nextjs"` so Vercel treats the app as Next.js.
+
+After changing any of these, **Redeploy** (Deployments → ⋮ → Redeploy).
+
+---
+
+## Troubleshooting: 404 on recruiter.solutions
+
+If you see **404 NOT_FOUND** (Code: NOT_FOUND, ID: cle1::...) on recruiter.solutions:
+
+1. **Test the Vercel deployment URL first**  
+   In Vercel → **Deployments** → click the latest deployment → open the **Visit** link (e.g. `https://ai-recruiting-platform-xxxx.vercel.app`).  
+   - If that URL **also shows 404** → the build isn’t serving your app. Go to step 2.  
+   - If that URL **loads the app** → the app is fine; the problem is domain/DNS. Go to step 3.
+
+2. **Fix the build (Root Directory + config)**  
+   Your Next.js app lives in the **`frontend`** folder. In Vercel → **Settings** → **General** → **Root Directory**, set to **`frontend`**. Ensure the repo has **`frontend/next.config.ts`** (with `turbopack.root`) and **`frontend/vercel.json`** (with `framework: "nextjs"`). Save, then **Redeploy** (Deployments → ⋮ on latest → **Redeploy**).  
+   Changing Root Directory does **not** change existing deployments; you must redeploy after saving.
+
+3. **Fix the custom domain**  
+   In Vercel → **Settings** → **Domains**: ensure **recruiter.solutions** and **www.recruiter.solutions** are listed and show **Valid Configuration**. Each should be assigned to **Production**. If either shows Invalid Configuration, fix DNS at your registrar (see section 2).  
+   Try both **https://recruiter.solutions** and **https://www.recruiter.solutions** in an incognito window in case one is cached.
+
+---
+
 ## Checklist (tick as you go)
 
 - [ ] **1.** Frontend deployed; domain `recruiter.solutions` (and `www` if used) added in Vercel.
