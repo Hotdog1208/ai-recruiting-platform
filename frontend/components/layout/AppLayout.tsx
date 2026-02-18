@@ -79,7 +79,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const nav = role === "candidate" ? candidateNav : employerNav;
+  const nav = role === "employer" ? employerNav : candidateNav;
   const isEmployer = role === "employer";
 
   return (

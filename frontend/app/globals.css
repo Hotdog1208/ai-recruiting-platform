@@ -2682,8 +2682,13 @@ section {
 .salary-card .note { font-size: 0.8rem; color: rgba(255,255,255,0.5); margin: 0; }
 
 /* Section 10: Activity chart */
-.activity-chart-section { margin-bottom: 2rem; }
-.activity-chart-section h2 { font-size: 1.25rem; margin: 0 0 1rem 0; }
+.activity-chart-section { margin-bottom: 2.5rem; }
+.activity-chart-section h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 1.25rem 0;
+  color: var(--text-primary);
+}
 .charts-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -2692,11 +2697,22 @@ section {
 .chart-container {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  border-radius: 1rem;
   padding: 1.5rem;
+  backdrop-filter: blur(8px);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-.chart-container h3 { font-size: 0.95rem; margin: 0 0 1rem 0; }
-.chart-inner { height: 220px; }
+.chart-container:hover {
+  border-color: rgba(0, 230, 118, 0.2);
+  box-shadow: 0 0 0 1px rgba(0, 230, 118, 0.08);
+}
+.chart-container h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: var(--text-primary);
+}
+.chart-inner { height: 240px; min-height: 200px; }
 
 .candidate-welcome-hero {
   background: linear-gradient(
@@ -3537,8 +3553,13 @@ section {
 .below-market { color: #fbbf24; font-size: 0.9rem; }
 
 /* Section 9: Analytics employer */
-.analytics-section-employer { margin-bottom: 2rem; }
-.analytics-section-employer h2 { font-size: 1.25rem; margin: 0 0 1rem 0; }
+.analytics-section-employer { margin-bottom: 2.5rem; }
+.analytics-section-employer h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 1.25rem 0;
+  color: var(--text-primary);
+}
 .analytics-section-employer .charts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -3547,10 +3568,21 @@ section {
 .analytics-section-employer .chart-card {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  border-radius: 1rem;
   padding: 1.5rem;
+  backdrop-filter: blur(8px);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-.analytics-section-employer .chart-card h3 { font-size: 0.95rem; margin: 0 0 1rem 0; }
+.analytics-section-employer .chart-card:hover {
+  border-color: rgba(59, 130, 246, 0.25);
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.08);
+}
+.analytics-section-employer .chart-card h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: var(--text-primary);
+}
 .funnel-inner { height: auto; min-height: 200px; }
 .funnel-chart { display: flex; flex-direction: column; gap: 0.75rem; }
 .funnel-stage { display: flex; align-items: center; gap: 1rem; }

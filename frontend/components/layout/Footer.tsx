@@ -1,10 +1,35 @@
+"use client";
+
 import Link from "next/link";
+import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 
 export function Footer() {
   return (
     <footer className="relative border-t border-[var(--border)] bg-[var(--bg-secondary)] overflow-hidden">
       {/* Accent gradient strip */}
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[var(--accent-primary)] to-transparent opacity-60" aria-hidden />
+
+      {/* Metrics strip */}
+      <div className="border-b border-[var(--border)] py-8">
+        <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 flex flex-wrap justify-center gap-x-16 gap-y-6 text-center">
+          <div>
+            <p className="font-display text-2xl sm:text-3xl font-bold text-white">
+              <AnimatedCounter value={4290} suffix="+" duration={1} />
+            </p>
+            <p className="text-[var(--text-secondary)] text-sm mt-1">Matches made</p>
+          </div>
+          <div>
+            <p className="font-display text-2xl sm:text-3xl font-bold text-white">
+              <AnimatedCounter value={0} suffix="%" duration={1} />
+            </p>
+            <p className="text-[var(--text-secondary)] text-sm mt-1">Bias in filtering</p>
+          </div>
+          <div>
+            <p className="font-display text-2xl sm:text-3xl font-bold text-white">2.3x</p>
+            <p className="text-[var(--text-secondary)] text-sm mt-1">Faster hires</p>
+          </div>
+        </div>
+      </div>
 
       <div className="max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-20">
         {/* Final CTA block */}

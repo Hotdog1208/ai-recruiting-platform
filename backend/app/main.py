@@ -12,7 +12,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi import HTTPException
 from fastapi.staticfiles import StaticFiles
 
-from app.api import auth, jobs, employers, candidates, users, applications, matching, external_jobs, saved_jobs, webhooks, billing, messaging, assessments, interview
+from app.api import auth, jobs, employers, candidates, users, applications, matching, external_jobs, saved_jobs, webhooks, billing, messaging, assessments, interview, stats
 from app.core.config import get_settings
 from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
@@ -122,6 +122,7 @@ app.include_router(billing.router)
 app.include_router(messaging.router)
 app.include_router(assessments.router)
 app.include_router(interview.router)
+app.include_router(stats.router)
 
 
 # Optional: serve uploaded candidate videos (backend/uploads/videos/)

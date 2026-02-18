@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 
 export function Navbar() {
-  const { user, role } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
 
@@ -46,7 +46,7 @@ export function Navbar() {
         {user ? (
           <>
             <Link
-              href={role === "employer" ? "/dashboard/employer" : "/dashboard/candidate"}
+              href="/dashboard"
               className="nav-link px-4 py-2 text-[15px] text-[var(--text-secondary)] hover:text-white transition-colors duration-200 font-medium"
             >
               Dashboard

@@ -11,6 +11,8 @@ import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 import { MagneticButton } from "@/components/ui/MagneticButton";
 import { TiltCard } from "@/components/ui/TiltCard";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
+import { PlatformMetrics } from "@/components/home/PlatformMetrics";
+import { TestimonialsSection } from "@/components/home/TestimonialsSection";
 
 const fadeUp = {
   initial: { opacity: 0, y: 40 },
@@ -53,11 +55,6 @@ const WHY_ITEMS = [
   { label: "Dashboard", icon: "grid" },
 ];
 
-const TESTIMONIALS = [
-  { quote: "Finally a platform that matches me to roles I actually want. The fit scores save so much time.", author: "Candidate" },
-  { quote: "We hired twice as fast. The AI shortlist is surprisingly accurate.", author: "Hiring manager" },
-];
-
 const HERO_LINES = [
   { text: "Where talent", accent: false },
   { text: "meets", accent: true },
@@ -93,7 +90,7 @@ export default function Home() {
       <Navbar />
 
       <main className="flex-1">
-        {/* Hero: one viewport below nav, gradient orbs + noise */}
+        {/* Hero */}
         <section className="relative min-h-[calc(100svh-6.25rem)] flex flex-col justify-center overflow-hidden hero-bg section-noise">
           <div className="hero-orb hero-orb-1" aria-hidden />
           <div className="hero-orb hero-orb-2" aria-hidden />
@@ -166,31 +163,29 @@ export default function Home() {
                 </Link>
               </motion.div>
             </div>
-            {/* Hero visual: gradient orb + illustration (desktop right, mobile below) */}
             <motion.div
               className="hero-visual relative flex lg:hidden items-center justify-center mt-12"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.8, delay: 0.5 }}
             >
               <div className="w-full max-w-sm mx-auto relative aspect-[400/220]">
-                <Image src="/illustrations/hero.svg" alt="" className="object-contain opacity-90" fill sizes="(max-width: 1024px) 400px, 400px" priority unoptimized />
+                <Image src="/illustrations/hero.svg" alt="" className="object-contain opacity-90" fill sizes="400px" priority unoptimized />
               </div>
             </motion.div>
             <motion.div
               className="hero-visual relative hidden lg:flex items-center justify-center"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 1, delay: 0.4 }}
             >
               <div className="absolute w-[400px] h-[400px] rounded-full bg-[var(--accent-primary)]/20 blur-[100px] animate-float" aria-hidden />
               <div className="absolute w-[280px] h-[280px] rounded-full bg-[var(--accent-secondary)]/10 blur-[80px] animate-float" style={{ animationDelay: "1.5s" }} aria-hidden />
               <div className="relative z-10 w-full max-w-md aspect-[480/280]">
-                <Image src="/illustrations/hero.svg" alt="" className="object-contain opacity-95 drop-shadow-2xl" fill sizes="(min-width: 1024px) 480px, 0px" unoptimized />
+                <Image src="/illustrations/hero.svg" alt="" className="object-contain opacity-95 drop-shadow-2xl" fill sizes="480px" unoptimized />
               </div>
             </motion.div>
           </div>
-          {/* Scroll indicator – animated arrow only */}
           <div className="scroll-indicator" aria-hidden>
             <span className="scroll-indicator-text">Scroll</span>
             <div className="scroll-indicator-arrow" />
@@ -217,15 +212,15 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Stats — label / value / description, no overlap */}
+        {/* Stats */}
         <ScrollReveal amount={0.2}>
           <section className="stats-section fade-in-section relative border-b border-[var(--border)]">
             <div className="stats-marquee max-w-6xl mx-auto px-6 sm:px-8 lg:px-12 py-16 sm:py-20">
               {[
-                { value: "AI", label: "Smart matching", desc: "Smart matching" },
-                { value: 0, label: "Zero bias", desc: "Bias in filtering", numeric: true, suffix: "%" },
-                { value: "1-Click", label: "One platform", desc: "Resume parsing" },
-                { value: "∞", label: "Trusted", desc: "Job sources" },
+                { value: 4290, suffix: "+", label: "Matches made", desc: "This year", numeric: true },
+                { value: 0, suffix: "%", label: "Zero bias", desc: "In filtering", numeric: true },
+                { value: 2.3, suffix: "x", label: "Faster hires", desc: "Vs. traditional", numeric: true, decimals: 1 },
+                { value: "1", suffix: "-Click", label: "Apply", desc: "Per job" },
               ].map((item, i) => (
                 <motion.div
                   key={item.label}
@@ -233,15 +228,20 @@ export default function Home() {
                   initial={{ opacity: 0, y: 24 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.3 }}
-                  transition={{ duration: 0.6, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                  transition={{ duration: 0.6, delay: i * 0.08 }}
                   whileHover={{ scale: 1.03 }}
                 >
                   <p className="stat-label">{item.label}</p>
                   <p className="stat-value font-display text-[2.5rem] sm:text-[3rem] font-bold text-white group-hover:text-[var(--accent-primary)] transition-colors duration-300 tracking-tight">
                     {item.numeric && typeof item.value === "number" ? (
-                      <AnimatedCounter value={item.value} suffix={item.suffix} duration={1} />
+                      <AnimatedCounter
+                        value={item.value}
+                        suffix={item.suffix}
+                        duration={1}
+                        decimals={"decimals" in item ? (item as { decimals?: number }).decimals ?? 0 : 0}
+                      />
                     ) : (
-                      item.value
+                      `${item.value}${item.suffix}`
                     )}
                   </p>
                   <p className="stat-description">{item.desc}</p>
@@ -251,61 +251,55 @@ export default function Home() {
           </section>
         </ScrollReveal>
 
-        {/* How it works — glass cards */}
-        <section className="how-it-works fade-in-section py-16 sm:py-24 px-6 sm:px-8 lg:px-12 border-b border-[var(--border)] section-noise relative">
+        {/* Platform metrics with charts */}
+        <PlatformMetrics />
+
+        {/* How it works */}
+        <section className="how-it-works fade-in-section py-20 sm:py-28 px-6 sm:px-8 lg:px-12 border-b border-[var(--border)] section-noise relative">
           <div className="max-w-6xl mx-auto relative">
             <ScrollReveal delay={0.05}>
-              <p className="font-display text-xs uppercase tracking-[0.25em] text-[var(--text-secondary)] mb-4 font-semibold">
+              <p className="font-display text-[11px] uppercase tracking-[0.3em] text-[var(--accent-primary)] mb-4 font-semibold">
                 How it works
               </p>
-              <h2 className="section-heading font-display max-w-2xl mb-4">
+              <h2 className="font-display text-[clamp(1.75rem, 3vw, 2.5rem)] font-bold text-white tracking-tight mb-4" style={{ letterSpacing: "-0.02em" }}>
                 Three steps to your next role
               </h2>
-              <p className="text-[var(--text-secondary)] section-subtitle text-left max-w-xl mb-12">
+              <p className="text-[var(--text-secondary)] text-[1.125rem] max-w-xl mb-16">
                 No forms. No guesswork. Just upload, match, and apply.
               </p>
             </ScrollReveal>
-            <div className="steps-grid cards-grid grid md:grid-cols-3 gap-6 md:gap-8 mb-16 items-stretch">
+            <div className="grid md:grid-cols-3 gap-6 md:gap-8 items-stretch">
               {HOW_IT_WORKS.map((step, i) => (
                 <ScrollReveal key={step.step} delay={i * 0.1} amount={0.2}>
-                  <div className="step-card card feature-card glass-card relative p-10 group h-full flex flex-col">
-                    <span className="step-number card-number font-display text-2xl">
-                      {step.step}
-                    </span>
-                    <h3 className="step-title card-title font-display text-[1.5rem] font-semibold text-white mt-4 mb-3 tracking-tight">
+                  <div className="step-card glass-card relative p-10 group h-full flex flex-col rounded-2xl border border-[var(--border)] hover:border-[var(--accent-primary)]/20 transition-colors duration-300">
+                    <span className="font-display text-3xl font-bold text-[var(--accent-primary)]/60">{step.step}</span>
+                    <h3 className="font-display text-[1.35rem] font-semibold text-white mt-4 mb-3 tracking-tight">
                       {step.title}
                     </h3>
-                    <p className="step-description card-description text-[var(--text-secondary)] text-[1.0625rem] leading-relaxed">{step.desc}</p>
+                    <p className="text-[var(--text-secondary)] text-[1rem] leading-relaxed flex-1">{step.desc}</p>
                   </div>
                 </ScrollReveal>
               ))}
             </div>
-            <ScrollReveal amount={0.15}>
-              <div className="glass-card relative p-8 sm:p-12 flex justify-center">
-                <div className="w-full max-w-md relative aspect-[400/240]">
-                  <Image src="/illustrations/hero.svg" alt="" className="object-contain opacity-90" fill sizes="400px" unoptimized />
-                </div>
-              </div>
-            </ScrollReveal>
           </div>
         </section>
 
-        {/* Why us — bento glass */}
-        <section className="py-16 sm:py-24 px-6 sm:px-8 lg:px-12">
+        {/* Why us */}
+        <section className="py-20 sm:py-28 px-6 sm:px-8 lg:px-12">
           <div className="max-w-6xl mx-auto">
             <ScrollReveal>
-              <p className="font-display text-xs uppercase tracking-[0.25em] text-[var(--text-secondary)] mb-4 font-semibold">
+              <p className="font-display text-[11px] uppercase tracking-[0.3em] text-[var(--accent-primary)] mb-4 font-semibold">
                 Why us
               </p>
-              <h2 className="section-heading font-display max-w-2xl mb-12">
+              <h2 className="font-display text-[clamp(1.75rem, 3vw, 2.5rem)] font-bold text-white mb-12 tracking-tight" style={{ letterSpacing: "-0.02em" }}>
                 Built for how you work
               </h2>
             </ScrollReveal>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 items-stretch">
               {WHY_ITEMS.map((item, i) => (
                 <ScrollReveal key={item.label} delay={i * 0.06} amount={0.2}>
-                  <div className="glass-card relative p-8 group h-full flex items-center">
-                    <p className="font-display text-display-sm text-white group-hover:text-[var(--accent-primary)] transition-colors text-[1.125rem]">
+                  <div className="glass-card relative p-8 rounded-2xl border border-[var(--border)] group h-full flex items-center hover:border-[var(--accent-primary)]/20 transition-colors duration-300">
+                    <p className="font-display text-[1.125rem] font-semibold text-white group-hover:text-[var(--accent-primary)] transition-colors">
                       {item.label}
                     </p>
                   </div>
@@ -315,14 +309,14 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Features — 3D tilt + glass */}
-        <section className="py-16 sm:py-24 px-6 sm:px-8 lg:px-12 border-t border-[var(--border)] section-noise relative">
+        {/* Features */}
+        <section className="py-20 sm:py-28 px-6 sm:px-8 lg:px-12 border-t border-[var(--border)] section-noise relative">
           <div className="max-w-6xl mx-auto">
             <ScrollReveal>
-              <p className="font-display text-xs uppercase tracking-[0.25em] text-[var(--text-secondary)] mb-4 font-semibold">
+              <p className="font-display text-[11px] uppercase tracking-[0.3em] text-[var(--accent-primary)] mb-4 font-semibold">
                 The product
               </p>
-              <h2 className="section-heading font-display max-w-2xl mb-12">
+              <h2 className="font-display text-[clamp(1.75rem, 3vw, 2.5rem)] font-bold text-white mb-12 tracking-tight" style={{ letterSpacing: "-0.02em" }}>
                 One platform. Every step of the hire.
               </h2>
             </ScrollReveal>
@@ -340,7 +334,7 @@ export default function Home() {
               ].map((feature) => (
                 <motion.div key={feature.title} variants={fadeUp}>
                   <TiltCard maxTilt={6} className="group" glare>
-                    <div className="glass-card relative p-10 h-full shine-hover">
+                    <div className="glass-card relative p-10 h-full rounded-2xl border border-[var(--border)] shine-hover">
                       <div className="w-14 h-14 rounded-2xl bg-[var(--accent-primary)]/15 flex items-center justify-center mb-8 text-[var(--accent-primary)]">
                         {feature.icon === "doc" && (
                           <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -358,10 +352,10 @@ export default function Home() {
                           </svg>
                         )}
                       </div>
-                      <h3 className="font-display text-[1.35rem] font-semibold text-white mb-4 tracking-tight">
+                      <h3 className="font-display text-[1.25rem] font-semibold text-white mb-4 tracking-tight">
                         {feature.title}
                       </h3>
-                      <p className="text-[var(--text-secondary)] text-[1.0625rem] leading-relaxed">{feature.desc}</p>
+                      <p className="text-[var(--text-secondary)] text-[1rem] leading-relaxed">{feature.desc}</p>
                     </div>
                   </TiltCard>
                 </motion.div>
@@ -371,45 +365,51 @@ export default function Home() {
         </section>
 
         {/* Testimonials */}
-        <section className="py-16 sm:py-24 px-6 sm:px-8 lg:px-12 border-y border-[var(--border)]">
-          <div className="max-w-6xl mx-auto">
-            <ScrollReveal>
-              <p className="font-display text-xs uppercase tracking-[0.25em] text-[var(--text-secondary)] mb-4 font-semibold">
-                What people say
-              </p>
-              <h2 className="section-heading font-display max-w-2xl mb-10">
-                Trusted by candidates and employers
-              </h2>
-            </ScrollReveal>
-            <div className="grid md:grid-cols-2 gap-8 items-stretch">
-              {TESTIMONIALS.map((t, i) => (
-                <ScrollReveal key={i} delay={i * 0.1} amount={0.2}>
-                  <blockquote className="glass-card relative p-10">
-                    <p className="text-[var(--text-primary)] text-[1.25rem] leading-relaxed">&ldquo;{t.quote}&rdquo;</p>
-                    <footer className="mt-6 text-[1rem] text-[var(--text-secondary)] font-medium">— {t.author}</footer>
-                  </blockquote>
-                </ScrollReveal>
-              ))}
-            </div>
+        <TestimonialsSection />
+
+        {/* Trust strip */}
+        <section className="py-10 px-6 sm:px-8 border-y border-[var(--border)]">
+          <div className="max-w-6xl mx-auto flex flex-wrap justify-center gap-x-12 gap-y-4 text-[var(--text-secondary)] text-sm">
+            <span className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-[var(--accent-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              Secure & private
+            </span>
+            <span className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-[var(--accent-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              AI-powered matching
+            </span>
+            <span className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-[var(--accent-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              Bias-free filtering
+            </span>
           </div>
         </section>
 
-        {/* CTA — centered, final punch */}
-        <section className="cta-section fade-in-section py-16 sm:py-24 px-6 sm:px-8 lg:px-12 hero-bg section-noise relative">
+        {/* CTA */}
+        <section className="cta-section fade-in-section py-20 sm:py-28 px-6 sm:px-8 lg:px-12 hero-bg section-noise relative">
           <ScrollReveal amount={0.2}>
-            <div className="flex flex-col items-center w-full max-w-3xl mx-auto">
-              <h2 className="cta-title section-heading font-display">
+            <div className="flex flex-col items-center w-full max-w-3xl mx-auto text-center">
+              <h2 className="cta-title font-display text-[clamp(2rem, 4vw, 3rem)] font-bold text-white tracking-tight mb-4" style={{ letterSpacing: "-0.03em" }}>
                 Ready to find your fit?
               </h2>
-              <p className="cta-subtitle text-[var(--text-secondary)]">
-                Create a free account. Upload your resume. Get matched.
+              <p className="cta-subtitle text-[var(--text-secondary)] text-[1.125rem] mb-10">
+                Candidates: upload your resume and get matched. Employers: post jobs and hire smarter. Both sides, one platform.
               </p>
-              <div className="cta-buttons">
-                <Link href="/signup" className="cta-button-primary btn-primary btn-magnetic shine-hover">
+              <div className="cta-buttons flex flex-wrap justify-center gap-4">
+                <Link href="/signup" className="cta-button-primary btn-primary btn-magnetic shine-hover px-8 py-4 text-base font-semibold">
                   Create free account
                 </Link>
-                <Link href="/jobs" className="cta-button-secondary btn-ghost link-underline">
+                <Link href="/jobs" className="cta-button-secondary btn-ghost link-underline px-6 py-3">
                   Browse jobs
+                </Link>
+                <Link href="/signup/employer" className="cta-button-secondary btn-ghost link-underline px-6 py-3">
+                  Post a job
                 </Link>
               </div>
             </div>

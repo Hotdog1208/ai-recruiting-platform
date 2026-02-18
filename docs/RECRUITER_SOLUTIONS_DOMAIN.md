@@ -84,14 +84,18 @@ Restart or redeploy the backend after changing env vars.
 
 ---
 
-## 5. Supabase auth redirect URLs
+## 5. Supabase auth redirect URLs and Site URL
+
+**Critical:** Confirmation links in emails redirect to the **Site URL**. If Site URL is `http://localhost:3000`, users will get "localhost refused to connect" when clicking the link from production sign-ups.
 
 1. Open [Supabase](https://supabase.com) → your project.
-2. **Authentication → URL Configuration → Redirect URLs**.
-3. Add:
+2. **Authentication → URL Configuration**.
+3. Set **Site URL** to `https://recruiter.solutions` (not localhost).
+4. Under **Redirect URLs**, add:
    - `https://recruiter.solutions/auth/callback`
    - `https://www.recruiter.solutions/auth/callback` (if you use www)
-4. Save. You can keep localhost URLs for local dev.
+   - `http://localhost:3000/auth/callback` (keep for local dev)
+5. Save. After this change, new confirmation emails will redirect to recruiter.solutions.
 
 ---
 
