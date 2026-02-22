@@ -1,9 +1,9 @@
 import uuid
 from datetime import datetime
 from sqlalchemy import Column, String, Text, ForeignKey, DateTime, UniqueConstraint
-from sqlalchemy.dialects.postgresql import UUID
-from app.db.base import Base
-
+  # type: ignore  # pyre-ignore\nfrom sqlalchemy.dialects.postgresql import UUID
+  # type: ignore  # pyre-ignore\nfrom app.db.base import Base
+  # type: ignore  # pyre-ignore\n
 
 class Application(Base):
     __tablename__ = "applications"

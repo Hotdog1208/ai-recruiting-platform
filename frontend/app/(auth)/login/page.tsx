@@ -34,7 +34,7 @@ function LoginForm() {
     }
     setSubmitting(true);
     try {
-      const { data, signInError } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
       if (signInError) {
         setError(signInError.message);
         setSubmitting(false);

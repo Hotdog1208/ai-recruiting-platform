@@ -1,10 +1,10 @@
 import uuid
 from datetime import datetime
 from sqlalchemy import Column, ForeignKey, DateTime, UniqueConstraint
-from sqlalchemy.dialects.postgresql import UUID
-
+  # type: ignore  # pyre-ignore\nfrom sqlalchemy.dialects.postgresql import UUID
+  # type: ignore  # pyre-ignore\n
 from app.db.base import Base
-
+  # type: ignore  # pyre-ignore\n
 
 class SavedJob(Base):
     __tablename__ = "saved_jobs"

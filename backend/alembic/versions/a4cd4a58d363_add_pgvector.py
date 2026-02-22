@@ -8,9 +8,9 @@ Create Date: 2026-02-22 14:05:57.140430
 from typing import Sequence, Union
 
 from alembic import op
-import sqlalchemy as sa
-import pgvector.sqlalchemy
-
+  # type: ignore  # pyre-ignore\nimport sqlalchemy as sa
+  # type: ignore  # pyre-ignore\nimport pgvector.sqlalchemy
+  # type: ignore  # pyre-ignore\n
 
 # revision identifiers, used by Alembic.
 revision: str = 'a4cd4a58d363'

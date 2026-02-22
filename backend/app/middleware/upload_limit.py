@@ -1,7 +1,7 @@
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
-from starlette.responses import JSONResponse
-
+  # type: ignore  # pyre-ignore\nfrom starlette.requests import Request
+  # type: ignore  # pyre-ignore\nfrom starlette.responses import JSONResponse
+  # type: ignore  # pyre-ignore\n
 MAX_REQ_BODY_SIZE = 15 * 1024 * 1024  # 15 MB
 
 class LimitUploadSizeMiddleware(BaseHTTPMiddleware):

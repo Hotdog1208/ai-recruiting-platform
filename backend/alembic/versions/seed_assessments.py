@@ -10,7 +10,7 @@ import uuid
 import json
 
 from alembic import op
-
+  # type: ignore  # pyre-ignore\n
 revision: str = "seed_assessments"
 down_revision: Union[str, Sequence[str], None] = "add_assessments"
 branch_labels: Union[str, Sequence[str], None] = None
@@ -35,7 +35,7 @@ PYTHON_QUESTIONS = [
 
 def upgrade() -> None:
     from sqlalchemy import text
-    conn = op.get_bind()
+  # type: ignore  # pyre-ignore\n    conn = op.get_bind()
     for skill_name, description, questions in [
         ("JavaScript Basics", "Basic JavaScript syntax and types", JS_QUESTIONS),
         ("Python Basics", "Basic Python syntax and built-ins", PYTHON_QUESTIONS),

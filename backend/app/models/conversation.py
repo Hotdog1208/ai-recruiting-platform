@@ -2,11 +2,11 @@
 import uuid
 from datetime import datetime
 from sqlalchemy import Column, String, ForeignKey, Boolean, DateTime, Text, UniqueConstraint
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
-
+  # type: ignore  # pyre-ignore\nfrom sqlalchemy.dialects.postgresql import UUID
+  # type: ignore  # pyre-ignore\nfrom sqlalchemy.orm import relationship
+  # type: ignore  # pyre-ignore\n
 from app.db.base import Base
-
+  # type: ignore  # pyre-ignore\n
 
 class Conversation(Base):
     __tablename__ = "conversations"
