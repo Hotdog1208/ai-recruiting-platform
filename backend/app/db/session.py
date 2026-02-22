@@ -1,9 +1,9 @@
 from sqlalchemy import create_engine
-  # type: ignore  # pyre-ignore\nfrom sqlalchemy.orm import sessionmaker
-  # type: ignore  # pyre-ignore\nfrom sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-  # type: ignore  # pyre-ignore\n
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+
 from app.core.config import get_settings
-  # type: ignore  # pyre-ignore\n
+
 _settings = get_settings()
 
 # Sync Engine (Legacy - preserving for incremental migration)

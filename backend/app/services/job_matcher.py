@@ -1,10 +1,10 @@
 import os
 import json
 from openai import OpenAI
-  # type: ignore  # pyre-ignore\nfrom sqlalchemy.future import select
-  # type: ignore  # pyre-ignore\nfrom app.db.session import AsyncSessionLocal
-  # type: ignore  # pyre-ignore\nfrom app.models import Candidate, Job
-  # type: ignore  # pyre-ignore\n
+from sqlalchemy.future import select
+from app.db.session import AsyncSessionLocal
+from app.models import Candidate, Job
+
 
 def _get_client():
     key = os.getenv("OPENAI_API_KEY") or "sk-placeholder"
@@ -16,7 +16,7 @@ async def generate_embedding(text: str, model: str = "text-embedding-3-small") -
         return None
     try:
         from openai import AsyncOpenAI
-  # type: ignore  # pyre-ignore\n        client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         response = await client.embeddings.create(input=[text], model=model)
         return response.data[0].embedding
     except Exception as e:
@@ -35,7 +35,7 @@ def get_candidate_text(c) -> str:
         f"Summary: {c.summary or ''}"
     ]
     return " ".join(parts)[:8000]
-  # type: ignore  # pyre-ignore\n
+
 def get_job_text(j) -> str:
     """Convert a job model or dict to text for embedding."""
     if isinstance(j, dict):
@@ -45,8 +45,8 @@ def get_job_text(j) -> str:
     else:
         title = getattr(j, "title", "")
         company = getattr(j.employer, "company_name", "") if getattr(j, "employer", None) else ""
-  # type: ignore  # pyre-ignore\n        desc = getattr(j, "description", "")
-  # type: ignore  # pyre-ignore\n    return f"Job Title: {title}. Company: {company}. Description: {desc}"[:8000]
+        desc = getattr(j, "description", "")
+    return f"Job Title: {title}. Company: {company}. Description: {desc}"[:8000]
 
 async def update_candidate_embedding_task(candidate_id):
     """Background worker to update candidate embedding."""
@@ -102,14 +102,14 @@ def compute_match_score(
     
     skills = candidate.get("skills") or []
     if isinstance(skills, list):
-  # type: ignore  # pyre-ignore\n        skills = ", ".join(str(s) for s in skills[:20])
+        skills = ", ".join(str(s) for s in skills[:20])
     else:
         skills = str(skills)
 
     experience = candidate.get("experience") or []
     if isinstance(experience, list):
         exp_str = "; ".join(
-  # type: ignore  # pyre-ignore\n            f"{e.get('title', '')} at {e.get('company', '')}" for e in experience[:5] if isinstance(e, dict)
+            f"{e.get('title', '')} at {e.get('company', '')}" for e in experience[:5] if isinstance(e, dict)
         )
     else:
         exp_str = str(experience)

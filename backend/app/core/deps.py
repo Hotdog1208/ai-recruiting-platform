@@ -5,14 +5,14 @@ Enforces ownership to prevent IDOR: candidate/employer can only access their own
 from uuid import UUID
 from typing import Annotated
 from fastapi import Depends, HTTPException
-  # type: ignore  # pyre-ignore\nfrom sqlalchemy.orm import Session
-  # type: ignore  # pyre-ignore\nfrom sqlalchemy.ext.asyncio import AsyncSession
-  # type: ignore  # pyre-ignore\nfrom sqlalchemy.future import select
-  # type: ignore  # pyre-ignore\n
+from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+
 from app.db.session import get_db, get_async_db
-  # type: ignore  # pyre-ignore\nfrom app.core.auth import get_current_user, get_current_user_optional, require_candidate, require_employer
-  # type: ignore  # pyre-ignore\nfrom app.models import User, Candidate, Employer, Job, Application
-  # type: ignore  # pyre-ignore\n
+from app.core.auth import get_current_user, get_current_user_optional, require_candidate, require_employer
+from app.models import User, Candidate, Employer, Job, Application
+
 # Re-export for convenience
 get_current_user_dep = get_current_user
 require_candidate_dep = require_candidate
@@ -49,7 +49,7 @@ def get_optional_candidate(
     if not current or current.get("role") != "candidate":
         return None
     return db.query(Candidate).filter(Candidate.user_id == current["user_id"]).first()
-  # type: ignore  # pyre-ignore\n
+
 
 def require_job_owner(
     job_id: UUID,
@@ -98,4 +98,4 @@ async def get_async_optional_candidate(
     if not current or current.get("role") != "candidate":
         return None
     result = await db.execute(select(Candidate).where(Candidate.user_id == current["user_id"]))
-  # type: ignore  # pyre-ignore\n    return result.scalars().first()
+    return result.scalars().first()

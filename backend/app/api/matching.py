@@ -1,18 +1,18 @@
 """Job-candidate matching API."""
 from uuid import UUID, uuid4
 from fastapi import APIRouter, Depends, Query
-  # type: ignore  # pyre-ignore\nfrom sqlalchemy.orm import Session
-  # type: ignore  # pyre-ignore\nfrom sqlalchemy.ext.asyncio import AsyncSession
-  # type: ignore  # pyre-ignore\nfrom sqlalchemy.future import select
-  # type: ignore  # pyre-ignore\nfrom sqlalchemy import or_, func
-  # type: ignore  # pyre-ignore\nimport asyncio
+from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy import or_, func
+import asyncio
 
 from app.db.session import get_db, get_async_db
-  # type: ignore  # pyre-ignore\nfrom app.core.deps import get_async_current_candidate, get_async_optional_candidate
-  # type: ignore  # pyre-ignore\nfrom app.models import Job, Candidate, ExternalJob, Employer
-  # type: ignore  # pyre-ignore\nfrom app.services.job_matcher import compute_match_score, generate_embedding, get_candidate_text
-  # type: ignore  # pyre-ignore\nfrom app.services.job_aggregator import get_external_jobs
-  # type: ignore  # pyre-ignore\n
+from app.core.deps import get_async_current_candidate, get_async_optional_candidate
+from app.models import Job, Candidate, ExternalJob, Employer
+from app.services.job_matcher import compute_match_score, generate_embedding, get_candidate_text
+from app.services.job_aggregator import get_external_jobs
+
 router = APIRouter(prefix="/matching", tags=["matching"])
 
 DEMO_JOBS = [
@@ -95,7 +95,7 @@ async def get_recommended_jobs(
                 "match_score": _fast_vector_score(float(distance)) if distance is not None else 75,
                 "match_reason": "Matched via scalable vector semantic search.",
                 "suggested_for_you": True if distance is not None and float(distance) < 0.25 else False,
-  # type: ignore  # pyre-ignore\n            })
+            })
     else:
         # Fallback if embeddings fail entirely
         result = await async_db.execute(select(Job).limit(limit))
@@ -132,7 +132,7 @@ async def get_recommended_jobs(
     # Sort: suggested first, then score
     results.sort(key=lambda x: (x.get("suggested_for_you", False), x.get("match_score", 0)), reverse=True)
     return results[:limit]
-  # type: ignore  # pyre-ignore\n
+
 
 @router.get("/browse")
 async def browse_all_jobs(
@@ -188,7 +188,7 @@ async def browse_all_jobs(
                 item["match_score"] = _fast_vector_score(float(distance))
                 item["match_reason"] = "Matched via semantic vector search."
                 item["suggested_for_you"] = True if float(distance) < 0.25 else False
-  # type: ignore  # pyre-ignore\n            else:
+            else:
                 item["match_score"] = 50
                 item["match_reason"] = "Semantic score unavailable."
                 item["suggested_for_you"] = False
@@ -204,21 +204,21 @@ async def browse_all_jobs(
         cand_dict = _candidate_to_dict(candidate) if candidate else None
         for ext in external:
             if q and q.strip():
-  # type: ignore  # pyre-ignore\n                q_lower = q.strip().lower()
-  # type: ignore  # pyre-ignore\n                if q_lower not in (ext.get("title") or "").lower() and q_lower not in (ext.get("description") or "").lower():
-  # type: ignore  # pyre-ignore\n                    continue
+                q_lower = q.strip().lower()
+                if q_lower not in (ext.get("title") or "").lower() and q_lower not in (ext.get("description") or "").lower():
+                    continue
             if location and location.strip():
-  # type: ignore  # pyre-ignore\n                loc = (ext.get("location") or "").lower()
-  # type: ignore  # pyre-ignore\n                if location.strip().lower() not in loc:
-  # type: ignore  # pyre-ignore\n                    continue
+                loc = (ext.get("location") or "").lower()
+                if location.strip().lower() not in loc:
+                    continue
             item: dict = dict(ext)
             if cand_dict:
                 match = compute_match_score(cand_dict, item)
                 item["match_score"] = match["score"]
-  # type: ignore  # pyre-ignore\n                item["match_reason"] = match["reason"]
-  # type: ignore  # pyre-ignore\n                item["suggested_for_you"] = match.get("suggested_for_you", False)
-  # type: ignore  # pyre-ignore\n            results.append(item)
-  # type: ignore  # pyre-ignore\n
+                item["match_reason"] = match["reason"]
+                item["suggested_for_you"] = match.get("suggested_for_you", False)
+            results.append(item)
+
     if not results:
         results = [dict(j) for j in DEMO_JOBS]
         # minimal filtering for demo

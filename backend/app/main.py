@@ -1,23 +1,23 @@
 # Load backend/.env before any app imports (required for uvicorn --reload subprocess on Windows)
 from pathlib import Path
 from dotenv import load_dotenv
-  # type: ignore  # pyre-ignore\n_load_dotenv_path = Path(__file__).resolve().parent.parent / ".env"
+_load_dotenv_path = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(_load_dotenv_path, override=False)
 
 from pathlib import Path
 from fastapi import FastAPI, Request
-  # type: ignore  # pyre-ignore\nfrom fastapi.middleware.cors import CORSMiddleware
-  # type: ignore  # pyre-ignore\nfrom fastapi.responses import JSONResponse
-  # type: ignore  # pyre-ignore\nfrom fastapi.exceptions import RequestValidationError
-  # type: ignore  # pyre-ignore\nfrom fastapi import HTTPException
-  # type: ignore  # pyre-ignore\nfrom fastapi.staticfiles import StaticFiles
-  # type: ignore  # pyre-ignore\n
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from fastapi import HTTPException
+from fastapi.staticfiles import StaticFiles
+
 from app.api import auth, jobs, employers, candidates, users, applications, matching, external_jobs, saved_jobs, webhooks, billing, messaging, assessments, interview, stats
-  # type: ignore  # pyre-ignore\nfrom app.core.config import get_settings
-  # type: ignore  # pyre-ignore\nfrom app.middleware.security_headers import SecurityHeadersMiddleware
-  # type: ignore  # pyre-ignore\nfrom app.middleware.rate_limit import RateLimitMiddleware
-  # type: ignore  # pyre-ignore\nfrom app.middleware.upload_limit import LimitUploadSizeMiddleware
-  # type: ignore  # pyre-ignore\n
+from app.core.config import get_settings
+from app.middleware.security_headers import SecurityHeadersMiddleware
+from app.middleware.rate_limit import RateLimitMiddleware
+from app.middleware.upload_limit import LimitUploadSizeMiddleware
+
 app = FastAPI()
 app.add_middleware(LimitUploadSizeMiddleware)
 app.add_middleware(RateLimitMiddleware)
@@ -50,7 +50,7 @@ def _validate_critical_config() -> None:
     """Run on startup: verify DB and JWT, log optional services. Exit 1 if critical config invalid."""
     import sys
     from sqlalchemy import create_engine, text
-  # type: ignore  # pyre-ignore\n
+
     try:
         _s = get_settings()
     except Exception as e:
@@ -64,7 +64,7 @@ def _validate_critical_config() -> None:
         url = str(_s.DATABASE_URL)
         if url.startswith("postgres://"):
             url = "postgresql://" + url[11:]
-  # type: ignore  # pyre-ignore\n        engine = create_engine(url)
+        engine = create_engine(url)
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
         print("\u2705 Database connection: OK")
@@ -144,9 +144,9 @@ def debug_config():
     import os
     if os.getenv("ENV", os.getenv("ENVIRONMENT", "")).lower() == "production":
         from fastapi import HTTPException
-  # type: ignore  # pyre-ignore\n        raise HTTPException(status_code=404, detail="Not available")
+        raise HTTPException(status_code=404, detail="Not available")
     from app.core.config import get_settings
-  # type: ignore  # pyre-ignore\n    s = get_settings()
+    s = get_settings()
     return {
         "has_database_url": bool(s.DATABASE_URL),
         "has_supabase_secret": bool(s.SUPABASE_JWT_SECRET),

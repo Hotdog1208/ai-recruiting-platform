@@ -1,0 +1,5 @@
+﻿c3e52da Fix deployment type errors and add psycopg2 driver
+208ad50 feat: complete UI/UX deep obsidian redesign and backend security audit
+4807256 Dashboard polish, auth flow, homepage redesign, Railway setup
+c81328d Lint errors should be fixed PLEASE
+865acd0 Lint errors should be fixed

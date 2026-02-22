@@ -2,10 +2,10 @@
 import uuid
 from datetime import datetime
 from sqlalchemy import Column, String, ForeignKey, Boolean, Integer, DateTime, Text, UniqueConstraint
-  # type: ignore  # pyre-ignore\nfrom sqlalchemy.dialects.postgresql import UUID, JSONB
-  # type: ignore  # pyre-ignore\n
+from sqlalchemy.dialects.postgresql import UUID, JSONB
+
 from app.db.base import Base
-  # type: ignore  # pyre-ignore\n
+
 
 class Assessment(Base):
     __tablename__ = "assessments"

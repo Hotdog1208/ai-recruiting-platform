@@ -6,11 +6,11 @@ Loads backend/.env by path so running from repo root or backend/ both work.
 import os
 from functools import lru_cache
 from pydantic import Field
-  # type: ignore  # pyre-ignore\nfrom pydantic_settings import BaseSettings, SettingsConfigDict
-  # type: ignore  # pyre-ignore\nfrom dotenv import load_dotenv
-  # type: ignore  # pyre-ignore\n
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from dotenv import load_dotenv
+
 from app.core.env_validation import validate_database_url, validate_supabase_jwt_secret
-  # type: ignore  # pyre-ignore\n
+
 # Resolve backend/.env so uvicorn works from repo root or backend/ (and with --reload subprocess)
 _BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _ENV_FILE = os.path.join(_BACKEND_DIR, ".env")
@@ -67,7 +67,7 @@ class Settings(BaseSettings):
         if not value or len(value) < 8:
             return "***"
         return value[:4] + "..." + value[-2:]
-  # type: ignore  # pyre-ignore\n
+
 
 @lru_cache
 def get_settings() -> Settings:

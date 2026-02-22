@@ -1,10 +1,10 @@
 import uuid
 from datetime import datetime
 from sqlalchemy import Column, String, ForeignKey, Integer, DateTime, Text
-  # type: ignore  # pyre-ignore\nfrom sqlalchemy.dialects.postgresql import UUID, JSON, JSONB
-  # type: ignore  # pyre-ignore\nfrom pgvector.sqlalchemy import Vector
-  # type: ignore  # pyre-ignore\nfrom app.db.base import Base
-  # type: ignore  # pyre-ignore\n
+from sqlalchemy.dialects.postgresql import UUID, JSON, JSONB
+from pgvector.sqlalchemy import Vector
+from app.db.base import Base
+
 
 class Candidate(Base):
     __tablename__ = "candidates"
