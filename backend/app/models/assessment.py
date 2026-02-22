@@ -1,7 +1,7 @@
 """Skill assessments and results for candidate verification."""
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, ForeignKey, Boolean, Integer, DateTime, Text
+from sqlalchemy import Column, String, ForeignKey, Boolean, Integer, DateTime, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 
 from app.db.base import Base
@@ -21,6 +21,7 @@ class Assessment(Base):
 
 class AssessmentResult(Base):
     __tablename__ = "assessment_results"
+    __table_args__ = (UniqueConstraint("candidate_id", "assessment_id", name="uq_assessment_result_candidate_assessment"),)
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     candidate_id = Column(UUID(as_uuid=True), ForeignKey("candidates.id"), nullable=False)

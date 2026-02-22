@@ -16,8 +16,10 @@ from app.api import auth, jobs, employers, candidates, users, applications, matc
 from app.core.config import get_settings
 from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
+from app.middleware.upload_limit import LimitUploadSizeMiddleware
 
 app = FastAPI()
+app.add_middleware(LimitUploadSizeMiddleware)
 app.add_middleware(RateLimitMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 

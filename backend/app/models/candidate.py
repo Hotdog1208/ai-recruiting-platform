@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime
 from sqlalchemy import Column, String, ForeignKey, Integer, DateTime, Text
 from sqlalchemy.dialects.postgresql import UUID, JSON, JSONB
+from pgvector.sqlalchemy import Vector
 from app.db.base import Base
 
 
@@ -29,5 +30,6 @@ class Candidate(Base):
     video_url = Column(String, nullable=True)  # 30–60s intro video URL
     resume_text = Column(Text, nullable=True)
     resume_parsed_data = Column(JSON, nullable=True)  # parsed_profile
+    embedding = Column(Vector(1536), nullable=True)  # OpenAI text-embedding-3-small
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

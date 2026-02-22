@@ -50,8 +50,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth">
-      <body className={`${syne.variable} ${manrope.variable} font-sans antialiased bg-[var(--bg-primary)] text-[var(--text-primary)]`}>
+    <html lang="en" className="scroll-smooth" style={{ backgroundColor: "#0a0a0a" }}>
+      <body
+        className={`${syne.variable} ${manrope.variable} font-sans antialiased bg-[var(--bg-primary)] text-[var(--text-primary)]`}
+        style={{ backgroundColor: "#0a0a0a", color: "#ffffff", minHeight: "100vh" }}
+      >
         <Providers>{children}</Providers>
       </body>
     </html>

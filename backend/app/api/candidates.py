@@ -1,6 +1,6 @@
 from pathlib import Path
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -9,6 +9,7 @@ from app.models import Candidate
 from app.schemas.candidate import CandidateUpdate
 from app.services.resume_extract import extract_text_from_file
 from app.services.resume_parser import parse_resume_text
+from app.services.job_matcher import update_candidate_embedding_task
 
 router = APIRouter(prefix="/candidates", tags=["candidates"])
 
@@ -54,6 +55,7 @@ def get_candidate_me(
 @router.put("/me")
 def update_candidate_me(
     payload: CandidateUpdate,
+    background_tasks: BackgroundTasks,
     current: dict = Depends(require_candidate),
     db: Session = Depends(get_db),
 ):
@@ -92,6 +94,7 @@ def update_candidate_me(
     if payload.video_url is not None:
         candidate.video_url = payload.video_url
     db.commit()
+    background_tasks.add_task(update_candidate_embedding_task, str(candidate.id))
     return {"status": "ok"}
 
 
@@ -101,16 +104,24 @@ MAX_VIDEO_BYTES = 50 * 1024 * 1024  # 50 MB for short intro video
 ALLOWED_VIDEO_TYPES = ("video/webm", "video/mp4", "video/quicktime")
 
 
-def _validate_resume_file(filename: str | None, content_size: int) -> None:
-    if content_size > MAX_RESUME_BYTES:
+def _validate_resume_file(filename: str | None, content: bytes) -> None:
+    if len(content) > MAX_RESUME_BYTES:
         raise HTTPException(status_code=400, detail="File too large (max 10MB)")
     fn = (filename or "").lower()
     if not any(fn.endswith(ext) for ext in ALLOWED_RESUME_EXTENSIONS):
         raise HTTPException(status_code=400, detail="Allowed types: PDF, DOCX, TXT")
+    
+    # Magic byte validation to verify actual file contents
+    if fn.endswith(".pdf") and not content.startswith(b"%PDF-"):
+        raise HTTPException(status_code=400, detail="Invalid PDF format")
+    if fn.endswith((".docx", ".doc")) and not content.startswith(b"PK\x03\x04") and not content.startswith(b"\xd0\xcf\x11\xe0"):
+        # PK... is the signature for ZIP/DOCX; \xd0... is the signature for older DOC files.
+        raise HTTPException(status_code=400, detail="Invalid MS Word document format")
 
 
 @router.post("/me/resume")
 def upload_resume_me(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     current: dict = Depends(require_candidate),
     db: Session = Depends(get_db),
@@ -120,7 +131,7 @@ def upload_resume_me(
     if not candidate:
         raise HTTPException(status_code=404, detail="Candidate not found")
     content = file.file.read()
-    _validate_resume_file(file.filename, len(content))
+    _validate_resume_file(file.filename, content)
     try:
         text = extract_text_from_file(content, file.filename or "resume.pdf")
     except ValueError as e:
@@ -143,6 +154,7 @@ def upload_resume_me(
     if hasattr(candidate, "resume_text"):
         candidate.resume_text = text
     db.commit()
+    background_tasks.add_task(update_candidate_embedding_task, str(candidate.id))
     return {"status": "ok", "parsed": parsed, "warnings": warnings, "ai_used": ai_used}
 
 
@@ -162,6 +174,14 @@ def upload_video_me(
     ct = (file.content_type or "").lower()
     if ct not in ALLOWED_VIDEO_TYPES and not (file.filename or "").lower().endswith((".webm", ".mp4", ".mov")):
         raise HTTPException(status_code=400, detail="Allowed: WebM, MP4")
+
+    # Magic byte validation for video files
+    if content:
+        magic = content[:12]
+        is_webm = magic.startswith(b"\x1aE\xdf\xa3")
+        is_mp4 = b"ftyp" in magic
+        if not (is_webm or is_mp4):
+            raise HTTPException(status_code=400, detail="Invalid video format signature")
     uploads_root = Path(__file__).resolve().parent.parent.parent / "uploads" / "videos"
     uploads_root.mkdir(parents=True, exist_ok=True)
     ext = ".webm" if "webm" in ct else ".mp4" if "mp4" in ct or "quicktime" in ct else ".webm"
@@ -191,6 +211,7 @@ def get_candidate_by_user(
 def update_candidate_by_user(
     user_id: UUID,
     payload: CandidateUpdate,
+    background_tasks: BackgroundTasks,
     current: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -231,12 +252,14 @@ def update_candidate_by_user(
     if payload.video_url is not None:
         candidate.video_url = payload.video_url
     db.commit()
+    background_tasks.add_task(update_candidate_embedding_task, str(candidate.id))
     return {"status": "ok"}
 
 
 @router.post("/by-user/{user_id}/resume")
 def upload_and_parse_resume(
     user_id: UUID,
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     current: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -249,7 +272,7 @@ def upload_and_parse_resume(
         raise HTTPException(status_code=404, detail="Candidate not found")
 
     content = file.file.read()
-    _validate_resume_file(file.filename, len(content))
+    _validate_resume_file(file.filename, content)
 
     try:
         text = extract_text_from_file(content, file.filename or "resume.pdf")
@@ -274,5 +297,6 @@ def upload_and_parse_resume(
         candidate.experience = parsed["experience"]
     candidate.resume_parsed_data = parsed
     db.commit()
+    background_tasks.add_task(update_candidate_embedding_task, str(candidate.id))
 
     return {"status": "ok", "parsed": parsed, "warnings": warnings, "ai_used": ai_used}

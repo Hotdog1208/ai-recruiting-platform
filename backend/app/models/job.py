@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime
 from sqlalchemy import Column, String, Boolean, Integer, ForeignKey, DateTime
 from sqlalchemy.dialects.postgresql import UUID, JSON, JSONB
+from pgvector.sqlalchemy import Vector
 from app.db.base import Base
 
 
@@ -20,5 +21,6 @@ class Job(Base):
     salary_min = Column(Integer, nullable=True)
     salary_max = Column(Integer, nullable=True)
     status = Column(String, nullable=True, default="open")  # open, closed
+    embedding = Column(Vector(1536), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

@@ -1,5 +1,5 @@
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
 
@@ -8,6 +8,7 @@ from app.core.deps import get_current_employer, require_job_owner
 from app.core.audit import log as audit_log
 from app.models import Job, Employer, Application
 from app.schemas.job import JobCreate, JobUpdate, JobResponse
+from app.services.job_matcher import update_job_embedding_task
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
@@ -77,6 +78,7 @@ def get_similar_jobs(job_id: UUID, limit: int = Query(5, le=10), db: Session = D
 def create_job(
     payload: JobCreate,
     request: Request,
+    background_tasks: BackgroundTasks,
     employer: Employer = Depends(get_current_employer),
     db: Session = Depends(get_db),
 ):
@@ -101,6 +103,7 @@ def create_job(
         ip=request.client.host if request.client else None,
         user_agent=request.headers.get("user-agent"),
     )
+    background_tasks.add_task(update_job_embedding_task, str(job.id))
     return job
 
 
@@ -133,6 +136,7 @@ def delete_job(
 def update_job(
     payload: JobUpdate,
     request: Request,
+    background_tasks: BackgroundTasks,
     job: Job = Depends(require_job_owner),
     db: Session = Depends(get_db),
 ):
@@ -160,4 +164,5 @@ def update_job(
             ip=request.client.host if request.client else None,
             user_agent=request.headers.get("user-agent"),
         )
+    background_tasks.add_task(update_job_embedding_task, str(job.id))
     return job

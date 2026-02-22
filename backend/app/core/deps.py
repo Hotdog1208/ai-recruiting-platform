@@ -6,8 +6,10 @@ from uuid import UUID
 from typing import Annotated
 from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
-from app.db.session import get_db
+from app.db.session import get_db, get_async_db
 from app.core.auth import get_current_user, get_current_user_optional, require_candidate, require_employer
 from app.models import User, Candidate, Employer, Job, Application
 
@@ -74,3 +76,26 @@ def require_application_job_owner(
     if not job:
         raise HTTPException(status_code=404, detail="Application not found")
     return app
+
+
+async def get_async_current_candidate(
+    current: Annotated[dict, Depends(require_candidate)],
+    db: AsyncSession = Depends(get_async_db),
+) -> Candidate:
+    """Async load candidate row for current user; 404 if not found."""
+    result = await db.execute(select(Candidate).where(Candidate.user_id == current["user_id"]))
+    c = result.scalars().first()
+    if not c:
+        raise HTTPException(status_code=404, detail="Candidate profile not found")
+    return c
+
+
+async def get_async_optional_candidate(
+    current: Annotated[dict | None, Depends(get_current_user_optional)],
+    db: AsyncSession = Depends(get_async_db),
+) -> Candidate | None:
+    """Async return candidate for current user if role is candidate and profile exists; else None."""
+    if not current or current.get("role") != "candidate":
+        return None
+    result = await db.execute(select(Candidate).where(Candidate.user_id == current["user_id"]))
+    return result.scalars().first()

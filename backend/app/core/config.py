@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     # Optional (AI, billing, jobs)
     AI_PROVIDER: str = Field(default="openai", description="AI provider: openai | anthropic")
     OPENAI_API_KEY: str | None = Field(default=None, description="OpenAI API key for resume/matching")
+    OPENAI_EMBEDDING_MODEL: str = Field(default="text-embedding-3-small", description="Model for matching embeddings")
     ANTHROPIC_API_KEY: str | None = Field(default=None, description="Anthropic API key (when AI_PROVIDER=anthropic)")
     STRIPE_SECRET_KEY: str | None = Field(default=None, description="Stripe secret key")
     STRIPE_WEBHOOK_SECRET: str | None = Field(default=None, description="Stripe webhook signing secret")
@@ -46,6 +47,15 @@ class Settings(BaseSettings):
     @property
     def frontend_origins(self) -> list[str]:
         return [o.strip() for o in self.FRONTEND_ORIGIN.split(",") if o.strip()]
+
+    @property
+    def async_database_url(self) -> str:
+        url = self.DATABASE_URL
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql://", 1)
+        if url.startswith("postgresql://"):
+            url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return url
 
     @property
     def frontend_base_url(self) -> str:

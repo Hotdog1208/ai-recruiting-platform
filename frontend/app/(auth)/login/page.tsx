@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/Input";
@@ -33,7 +34,7 @@ function LoginForm() {
     }
     setSubmitting(true);
     try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, signInError } = await supabase.auth.signInWithPassword({ email, password });
       if (signInError) {
         setError(signInError.message);
         setSubmitting(false);
@@ -51,52 +52,78 @@ function LoginForm() {
   if (loading || (user && role)) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
-        <div className="flex gap-2">
-          <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: "0ms" }} />
-          <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: "150ms" }} />
-          <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: "300ms" }} />
+         {/* Premium Loading Pulse */}
+        <div className="relative w-16 h-16">
+          <div className="absolute inset-0 rounded-full border-t-2 border-[var(--accent-primary)] animate-spin" />
+          <div className="absolute inset-2 rounded-full border-r-2 border-[var(--accent-secondary)] animate-spin" style={{ animationDirection: "reverse", animationDuration: "1.5s" }} />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-md">
-      <div className="card-sharp p-8 border-[var(--border)] bg-[var(--bg-card)]">
-        <h1 className="font-display text-display-sm text-[1.5rem] text-white mb-1 tracking-tight">Welcome back</h1>
-        <p className="text-[var(--text-muted)] text-[15px] mb-8">Log in to continue to Recruiter.Solutions</p>
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className="w-full"
+    >
+      <div className="card-interactive p-10 border-white/5 bg-black/40 backdrop-blur-2xl shadow-2xl relative overflow-hidden">
+        {/* Subtle top glare */}
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+        
+        <h1 className="font-display text-4xl font-extrabold text-white mb-2 tracking-tighter">Welcome back.</h1>
+        <p className="text-gray-400 text-sm mb-10 font-medium">Log in to enter the AI Recruiting Engine.</p>
 
         {resetSuccess && (
-          <div className="p-3 bg-[var(--accent-dim)] text-[var(--accent)] rounded-[var(--radius-md)] text-[13px] mb-5 border border-[var(--accent)]/20">
+          <div className="p-4 bg-[var(--success)]/10 text-[var(--success-light)] rounded-xl text-sm mb-6 border border-[var(--success)]/20 font-bold">
             Password updated successfully. You can now log in.
           </div>
         )}
 
-        <form onSubmit={handleSignIn} className="space-y-5">
-          <Input label="Email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          <Input label="Password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
-
-          <div className="flex justify-end">
-            <Link href="/forgot-password" className="text-sm text-[var(--accent)] hover:text-[var(--accent-hover)] font-medium link-underline">
-              Forgot password?
-            </Link>
+        <form onSubmit={handleSignIn} className="space-y-6">
+          <Input 
+            label="SECURE EMAIL" 
+            type="email" 
+            placeholder="identity@origin.com" 
+            value={email} 
+            onChange={(e) => setEmail(e.target.value)} 
+            required 
+            className="bg-black/50 border-white/5"
+          />
+          
+          <div className="space-y-2">
+            <Input 
+              label="ACCESS TOKEN" 
+              type="password" 
+              placeholder="••••••••••••" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              required 
+              className="bg-black/50 border-white/5"
+            />
+            <div className="flex justify-end">
+              <Link href="/forgot-password" className="text-[11px] font-bold tracking-widest uppercase text-[var(--accent-primary)] hover:text-white transition-colors">
+                Recover Access
+              </Link>
+            </div>
           </div>
 
-          {error && <div className="p-3 bg-red-500/20 text-red-400 rounded-[var(--radius-md)] text-[13px]">{error}</div>}
+          {error && <div className="p-4 bg-red-500/10 text-red-500 rounded-xl text-sm font-bold border border-red-500/20">{error}</div>}
 
-          <Button type="submit" className="w-full" size="lg" isLoading={submitting} disabled={submitting}>
-            Sign in
+          <Button type="submit" className="w-full mt-4" size="lg" isLoading={submitting}>
+            Authenticate Origin
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-[var(--text-muted)] text-sm">
-          Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-[var(--accent)] hover:text-[var(--accent-hover)] font-medium link-underline">
-            Sign up
+        <p className="mt-8 text-center text-gray-500 text-sm font-medium">
+          New to the platform?{" "}
+          <Link href="/signup" className="text-white hover:text-[var(--accent-primary)] font-bold transition-colors">
+            Initialize Account
           </Link>
         </p>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -104,10 +131,8 @@ export default function LoginPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-[40vh]">
-        <div className="flex gap-2">
-          <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: "0ms" }} />
-          <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: "150ms" }} />
-          <div className="w-2 h-2 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: "300ms" }} />
+        <div className="relative w-16 h-16">
+          <div className="absolute inset-0 rounded-full border-t-2 border-[var(--accent-primary)] animate-spin" />
         </div>
       </div>
     }>

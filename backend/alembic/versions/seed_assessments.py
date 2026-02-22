@@ -43,7 +43,7 @@ def upgrade() -> None:
         conn.execute(
             text(
                 "INSERT INTO assessments (id, skill_name, description, questions, passing_score, duration_minutes, created_at) "
-                "VALUES (:id, :skill_name, :description, :questions::jsonb, 70, 15, now())"
+                "VALUES (:id, :skill_name, :description, CAST(:questions AS jsonb), 70, 15, now())"
             ),
             {"id": uuid.uuid4(), "skill_name": skill_name, "description": description, "questions": json.dumps(questions)}
         )

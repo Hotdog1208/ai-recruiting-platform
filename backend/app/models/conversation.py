@@ -1,7 +1,7 @@
 """Conversation and Message models for direct messaging between users (candidates/employers)."""
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, ForeignKey, Boolean, DateTime, Text
+from sqlalchemy import Column, String, ForeignKey, Boolean, DateTime, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -10,6 +10,7 @@ from app.db.base import Base
 
 class Conversation(Base):
     __tablename__ = "conversations"
+    __table_args__ = (UniqueConstraint("participant_1", "participant_2", name="uq_conversation_participants"),)
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     participant_1 = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)

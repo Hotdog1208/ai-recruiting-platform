@@ -1,12 +1,75 @@
-"""AI-powered job-candidate matching."""
 import os
 import json
 from openai import OpenAI
+from sqlalchemy.future import select
+from app.db.session import AsyncSessionLocal
+from app.models import Candidate, Job
 
 
 def _get_client():
     key = os.getenv("OPENAI_API_KEY") or "sk-placeholder"
     return OpenAI(api_key=key)
+
+async def generate_embedding(text: str, model: str = "text-embedding-3-small") -> list[float] | None:
+    """Generate a vector embedding using OpenAI."""
+    if not os.getenv("OPENAI_API_KEY") or not text.strip():
+        return None
+    try:
+        from openai import AsyncOpenAI
+        client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        response = await client.embeddings.create(input=[text], model=model)
+        return response.data[0].embedding
+    except Exception as e:
+        print(f"Error generating embedding: {e}")
+        return None
+
+def get_candidate_text(c) -> str:
+    """Convert a candidate model to text for embedding."""
+    skills = c.skills if isinstance(c.skills, list) else []
+    exp = c.experience if isinstance(c.experience, list) else []
+    exp_text = "; ".join([f"{e.get('title', '')} at {e.get('company', '')}" for e in exp if isinstance(e, dict)])
+    parts = [
+        f"Role: {c.headline or c.full_name}",
+        f"Skills: {', '.join(skills)}",
+        f"Experience: {exp_text}",
+        f"Summary: {c.summary or ''}"
+    ]
+    return " ".join(parts)[:8000]
+
+def get_job_text(j) -> str:
+    """Convert a job model or dict to text for embedding."""
+    title = j.title if hasattr(j, "title") else j.get("title", "")
+    company = ""
+    if hasattr(j, "employer") and j.employer:
+        company = j.employer.company_name
+    elif isinstance(j, dict):
+        company = j.get("company", "")
+    desc = j.description if hasattr(j, "description") else j.get("description", "")
+    return f"Job Title: {title}. Company: {company}. Description: {desc}"[:8000]
+
+async def update_candidate_embedding_task(candidate_id):
+    """Background worker to update candidate embedding."""
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(select(Candidate).where(Candidate.id == candidate_id))
+        c = result.scalars().first()
+        if c:
+            text = get_candidate_text(c)
+            emb = await generate_embedding(text)
+            if emb:
+                c.embedding = emb
+                await db.commit()
+
+async def update_job_embedding_task(job_id):
+    """Background worker to update job embedding."""
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(select(Job).where(Job.id == job_id))
+        j = result.scalars().first()
+        if j:
+            text = get_job_text(j)
+            emb = await generate_embedding(text)
+            if emb:
+                j.embedding = emb
+                await db.commit()
 
 MATCH_PROMPT = """Given a candidate profile and a job listing, score how well the candidate fits the job from 0-100.
 

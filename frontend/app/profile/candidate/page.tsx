@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { apiGet, apiPatch, apiUpload } from "@/lib/api";
+import { apiGet, apiPut, apiUpload } from "@/lib/api";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { countries, getStates, getCities, WORK_PREFERENCES, WORK_TYPES } from "@/lib/location";
@@ -65,7 +65,7 @@ export default function CandidateProfilePage() {
 
   useEffect(() => {
     if (!user || !session?.access_token) return;
-    apiGet<CandidateProfile>(`/candidates/by-user/${user.id}`, session.access_token)
+    apiGet<CandidateProfile>(`/candidates/me`, session.access_token)
       .then((p) => {
         setProfile(p);
         setFullName(p.full_name);
@@ -107,7 +107,7 @@ export default function CandidateProfilePage() {
         parsed: Record<string, unknown>;
         warnings?: string[];
         ai_used?: boolean;
-      }>(`/candidates/by-user/${user.id}/resume`, file, session.access_token);
+      }>(`/candidates/me/resume`, file, session.access_token);
       setFullName((res.parsed?.full_name as string) || fullName);
       if (Array.isArray(res.parsed?.skills) && res.parsed.skills.length) {
         setSkillsText((res.parsed.skills as string[]).join(", "));
@@ -132,7 +132,7 @@ export default function CandidateProfilePage() {
     setSaving(true);
     setSuccess(false);
     try {
-      await apiPatch(`/candidates/by-user/${user.id}`, {
+      await apiPut(`/candidates/me`, {
         full_name: fullName.trim(),
         age: age ? parseInt(age, 10) : null,
         city: city.trim() || null,
@@ -195,7 +195,7 @@ export default function CandidateProfilePage() {
                 if (!session?.access_token) throw new Error("Please log in again.");
                 const file = new File([blob], "intro.webm", { type: blob.type || "video/webm" });
                 await apiUpload<{ video_url: string }>(`/candidates/me/video`, file, session.access_token);
-                const p = await apiGet<CandidateProfile>(`/candidates/by-user/${user!.id}`, session.access_token);
+                const p = await apiGet<CandidateProfile>(`/candidates/me`, session.access_token);
                 setProfile(p);
                 setShowVideoRecorder(false);
               }}
