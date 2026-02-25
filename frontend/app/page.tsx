@@ -1,60 +1,75 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring, useInView, Variants } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 import { MagneticButton } from "@/components/ui/MagneticButton";
 import { TiltCard } from "@/components/ui/TiltCard";
-import { ScrollReveal } from "@/components/ui/ScrollReveal";
 
-const fadeUp = {
-  initial: { opacity: 0, y: 50 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 1, ease: [0.16, 1, 0.3, 1] },
+// Utility for staggered text animations
+const StaggeredText = ({ text, className }: { text: string; className?: string }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-10%" });
+  
+  const words = text.split(" ");
+  
+  const container = {
+    hidden: { opacity: 0 },
+    visible: (i = 1) => ({
+      opacity: 1,
+      transition: { staggerChildren: 0.08, delayChildren: 0.1 * i },
+    }),
+  };
+
+  const child: Variants = {
+    visible: {
+      opacity: 1,
+      y: 0,
+      rotateX: 0,
+      transition: { type: "spring", damping: 12, stiffness: 100 },
+    },
+    hidden: {
+      opacity: 0,
+      y: 40,
+      rotateX: -90,
+      transition: { type: "spring", damping: 12, stiffness: 100 },
+    },
+  };
+
+  return (
+    <motion.div
+      ref={ref}
+      className={`flex flex-wrap ${className}`}
+      variants={container}
+      initial="hidden"
+      animate={isInView ? "visible" : "hidden"}
+    >
+      {words.map((word, index) => (
+        <motion.span variants={child} key={index} className="mr-[0.25em] inline-block" style={{ transformOrigin: "bottom" }}>
+          {word}
+        </motion.span>
+      ))}
+    </motion.div>
+  );
 };
-
-const staggerContainer = {
-  animate: {
-    transition: { staggerChildren: 0.1, delayChildren: 0.2 },
-  },
-};
-
-const MARQUEE_ITEMS = [
-  "Deep Vector Matching",
-  "O(1) Similarity Search",
-  "Bias-Free AI",
-  "Seamless Candidate Experience",
-  "Zero-Trust Security",
-  "Automated Resume Parsing",
-  "Premium ATS Integrated",
-  "✦",
-  "Find your perfect fit",
-  "Hire in milliseconds",
-  "✦",
-];
 
 export default function Home() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const { scrollYProgress } = useScroll();
-  const yHeroText = useTransform(scrollYProgress, [0, 1], [0, 300]);
-  const yHeroVisual = useTransform(scrollYProgress, [0, 1], [0, -100]);
-
-  useEffect(() => {
-    const observerOptions = { threshold: 0.1, rootMargin: "0px 0px -50px 0px" };
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) entry.target.classList.add("visible");
-      });
-    }, observerOptions);
-    document.querySelectorAll(".fade-in-section").forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
-  }, []);
+  
+  // Smooth out scroll progress
+  const smoothProgress = useSpring(scrollYProgress, { damping: 20, stiffness: 100 });
+  
+  // Parallax effects
+  const yHeroText = useTransform(smoothProgress, [0, 1], [0, 400]);
+  const yHeroVisual = useTransform(smoothProgress, [0, 1], [0, -200]);
+  const opacityHero = useTransform(smoothProgress, [0, 0.2], [1, 0]);
+  const scaleHero = useTransform(smoothProgress, [0, 0.2], [1, 0.95]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,309 +81,312 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--bg-primary)]">
+    <div className="min-h-screen flex flex-col bg-black text-white selection:bg-[#00f0ff] selection:text-black font-body overflow-x-hidden">
       <Navbar />
 
-      <main className="flex-1 overflow-hidden">
-        {/* HERO SECTION - Jaw Dropping Aesthetics */}
-        <section className="relative min-h-[100vh] flex flex-col justify-center overflow-hidden hero-bg">
-          <div className="noise-overlay-hero" aria-hidden />
-          
-          <div className="relative grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-12 lg:gap-8 items-center max-w-[1400px] mx-auto px-6 sm:px-8 lg:px-12 py-20 lg:py-0 w-full z-10">
-            <motion.div style={{ y: yHeroText }} className="hero-content-wrap w-full pr-0 md:pr-12">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-8"
-              >
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent-primary)] opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-[var(--accent-primary)] shadow-[0_0_10px_var(--accent-primary)]"></span>
-                </span>
-                <span className="text-sm font-semibold tracking-wider uppercase text-[var(--accent-primary)]">Next-Gen AI Recruiting Engine</span>
-              </motion.div>
+      <main className="flex-1">
+        {/* =========================================
+            HERO SECTION: Cinematic & Immersive
+            ========================================= */}
+        <section className="relative h-screen min-h-[800px] flex flex-col justify-center items-center overflow-hidden">
+          {/* Animated Liquid Background Blobs */}
+          <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+             <motion.div 
+               className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full mix-blend-screen opacity-40 blur-[100px]"
+               style={{ background: "radial-gradient(circle, rgba(0,240,255,1) 0%, rgba(0,0,0,0) 70%)" }}
+               animate={{ 
+                 x: [0, 100, 0],
+                 y: [0, 50, 0],
+                 scale: [1, 1.2, 1]
+               }}
+               transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+             />
+             <motion.div 
+               className="absolute bottom-[-10%] right-[-10%] w-[70%] h-[70%] rounded-full mix-blend-screen opacity-30 blur-[120px]"
+               style={{ background: "radial-gradient(circle, rgba(122,0,255,1) 0%, rgba(0,0,0,0) 70%)" }}
+               animate={{ 
+                 x: [0, -100, 0],
+                 y: [0, -50, 0],
+                 scale: [1, 1.3, 1]
+               }}
+               transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+             />
+             <motion.div 
+               className="absolute top-[20%] right-[30%] w-[40%] h-[40%] rounded-full mix-blend-screen opacity-20 blur-[80px]"
+               style={{ background: "radial-gradient(circle, rgba(255,0,122,1) 0%, rgba(0,0,0,0) 70%)" }}
+               animate={{ 
+                 x: [0, 50, -50, 0],
+                 y: [0, -50, 50, 0],
+               }}
+               transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+             />
+          </div>
 
-              <h1 className="text-white font-display text-[clamp(3.5rem,8vw,6.5rem)] font-extrabold leading-[0.9] tracking-tighter mb-8 mix-blend-plus-lighter">
-                Hire the <br/>
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-[var(--accent-primary)] via-[#fff] to-[var(--accent-secondary)] drop-shadow-[0_0_20px_rgba(0,240,255,0.4)]">
-                  Impossible.
+          {/* Grid Overlay for depth */}
+          <div className="absolute inset-0 z-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-10 pointer-events-none" />
+
+          <motion.div 
+            style={{ y: yHeroText, opacity: opacityHero, scale: scaleHero }}
+            className="relative z-10 container mx-auto px-6 text-center flex flex-col items-center mt-20"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 0.2 }}
+              className="inline-flex items-center gap-3 px-6 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-xl mb-12 shadow-[0_0_30px_rgba(0,240,255,0.1)]"
+            >
+              <span className="w-2 h-2 rounded-full bg-[#00f0ff] animate-pulse shadow-[0_0_10px_#00f0ff]" />
+              <span className="text-xs md:text-sm font-bold tracking-[0.2em] uppercase text-[#00f0ff]">AI Vector Recruiting Engine</span>
+            </motion.div>
+
+            <h1 className="font-display text-[clamp(4rem,10vw,9.5rem)] font-black leading-[0.85] tracking-[-0.04em] mix-blend-plus-lighter mb-8 w-full max-w-[1200px]">
+              <StaggeredText text="We don't find" className="justify-center" />
+              <div className="relative inline-block mt-2 md:mt-4">
+                <span className="absolute inset-0 bg-gradient-to-r from-[#00f0ff] via-[#fff] to-[#7a00ff] blur-2xl opacity-40 mix-blend-screen" />
+                <span className="relative text-transparent bg-clip-text bg-gradient-to-r from-[#00f0ff] via-[#fff] to-[#7a00ff]">
+                  candidates.
                 </span>
-              </h1>
-              
-              <motion.p
-                className="text-[var(--text-secondary)] text-[clamp(1.1rem,1.5vw,1.3rem)] leading-relaxed max-w-xl mb-12 font-medium"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              >
-                Zero-friction matching powered by an asynchronous 1536-dimensional vector database. Upload a resume, instantly find the perfect fit.
-              </motion.p>
-              
-              <motion.form
-                onSubmit={handleSearch}
-                className="flex flex-col sm:flex-row gap-4 max-w-xl mb-10"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              >
-                <div className="relative flex-1">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Job title, keywords, or company"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="w-full pl-12 pr-5 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-gray-500 focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all shadow-[0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-xl text-lg"
-                  />
+              </div>
+            </h1>
+
+            <motion.h1 
+              className="font-display text-[clamp(4rem,10vw,9.5rem)] font-black leading-[0.85] tracking-[-0.04em] text-white/40 mix-blend-plus-lighter mb-12 w-full max-w-[1200px]"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 0.8 }}
+            >
+              We <em className="not-italic text-white">compute</em> them.
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1.5, delay: 1.2 }}
+              className="text-white/60 text-[clamp(1.1rem,2vw,1.4rem)] font-medium max-w-2xl leading-relaxed mb-16"
+            >
+              Legacy ATS relies on noisy keyword matching. We map human experience into a 1536-dimensional hyper-space for mathematically guaranteed hires.
+            </motion.p>
+
+            {/* Futuristic Search/CTA Bar */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 1, delay: 1.4, type: "spring" }}
+              className="w-full max-w-2xl relative group"
+            >
+              <div className="absolute -inset-1 bg-gradient-to-r from-[#00f0ff] to-[#7a00ff] rounded-[2rem] blur-xl opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200" />
+              <form onSubmit={handleSearch} className="relative flex items-center bg-black/60 border border-white/10 backdrop-blur-2xl p-2 rounded-[2rem] shadow-2xl">
+                <div className="pl-6 text-white/40">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
                 </div>
-                <MagneticButton strength={0.2} className="shrink-0">
-                  <button type="submit" className="btn-primary w-full sm:w-auto h-full min-h-[60px] text-lg font-bold rounded-2xl shadow-[0_0_40px_rgba(0,240,255,0.2)]">
-                    Explore
+                <input
+                  type="text"
+                  placeholder="Tell the engine what you need..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full bg-transparent border-none text-white px-6 py-5 focus:outline-none focus:ring-0 text-lg md:text-xl placeholder:text-white/30"
+                />
+                <MagneticButton strength={0.4}>
+                  <button type="submit" className="bg-white text-black px-8 py-5 rounded-full font-bold text-lg hover:scale-105 transition-transform flex items-center gap-2">
+                    Execute <span className="opacity-50">→</span>
                   </button>
                 </MagneticButton>
-              </motion.form>
-              
-              <motion.div
-                className="flex flex-wrap gap-4 items-center"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 1, delay: 0.5 }}
-              >
-                <Link href="/signup/candidate" className="text-gray-400 hover:text-white transition-colors text-sm font-semibold tracking-wide border-b border-white/10 hover:border-[var(--accent-primary)] pb-1">
-                  I AM A CANDIDATE
-                </Link>
-                <span className="text-gray-700 font-bold">•</span>
-                <Link href="/signup/employer" className="text-gray-400 hover:text-white transition-colors text-sm font-semibold tracking-wide border-b border-white/10 hover:border-[var(--accent-secondary)] pb-1">
-                  I AM AN EMPLOYER
-                </Link>
-              </motion.div>
+              </form>
             </motion.div>
+          </motion.div>
+        </section>
 
-            {/* Right Side UI Visualization */}
-            <motion.div style={{ y: yHeroVisual }} className="hidden lg:block relative h-full min-h-[600px] perspective-1000">
-              <motion.div 
-                className="absolute right-0 top-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-[var(--accent-primary)]/10 via-[var(--accent-secondary)]/10 to-transparent blur-3xl rounded-full"
-                animate={{ rotate: 360, scale: [1, 1.1, 1] }}
-                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              />
-              
-              <TiltCard className="absolute right-10 top-20 w-[420px] z-20" maxTilt={8}>
-                <div className="card-interactive p-6 border-white/10 bg-black/40 backdrop-blur-2xl">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#00f0ff] to-[#0084ff] p-[2px]">
-                      <div className="w-full h-full bg-black rounded-full overflow-hidden">
-                        <Image src="https://i.pravatar.cc/150?u=a042581f4e29026024d" alt="Profile" width={56} height={56} />
-                      </div>
-                    </div>
+        {/* =========================================
+            BENTO GRID FEATURE SHOWCASE
+            ========================================= */}
+        <section className="py-40 relative z-20 bg-black">
+          <div className="container mx-auto px-6 max-w-[1400px]">
+            <div className="mb-20">
+              <h2 className="font-display text-[clamp(3rem,5vw,5rem)] font-black leading-none tracking-tight">
+                <StaggeredText text="Engineering" />
+                <span className="text-[#00f0ff]">Superiority.</span>
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-6 h-auto md:h-[800px]">
+              {/* Feature 1: Large */}
+              <TiltCard className="md:col-span-2 md:row-span-1 h-full" maxTilt={3}>
+                <div className="card-interactive h-full w-full p-10 md:p-14 border border-white/5 bg-gradient-to-br from-white/[0.03] to-transparent overflow-hidden relative group">
+                  <div className="absolute right-0 top-0 w-[500px] h-[500px] bg-[#00f0ff]/10 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2 group-hover:bg-[#00f0ff]/20 transition-colors duration-700" />
+                  <div className="relative z-10 flex flex-col h-full justify-between">
                     <div>
-                      <h3 className="text-white font-bold text-lg leading-tight">Sarah Jenkins</h3>
-                      <p className="text-[var(--accent-primary)] text-sm font-medium">98.2% AI Vector Match</p>
+                      <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/5 border border-white/10 mb-8 text-[#00f0ff]">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                      </div>
+                      <h3 className="text-3xl md:text-4xl font-display font-bold mb-4">O(1) Similarity Search</h3>
+                      <p className="text-white/50 text-lg max-w-md font-medium leading-relaxed">By combining Asynchronous PostgreSQL with C-compiled Native Vector extensions (`pgvector`), we execute deep Cosine Similarity algorithms at the absolute hardware limit.</p>
                     </div>
-                    <div className="ml-auto flex gap-1">
-                      <div className="w-2 h-2 rounded-full bg-[var(--accent-primary)] animate-pulse" />
-                      <div className="w-2 h-2 rounded-full bg-[var(--accent-primary)]/50" />
-                      <div className="w-2 h-2 rounded-full bg-[var(--accent-primary)]/20" />
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                      <motion.div className="h-full bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)]" initial={{ width: "0%" }} animate={{ width: "98%" }} transition={{ duration: 1.5, delay: 0.5, ease: "easeOut" }} />
-                    </div>
-                    <div className="flex justify-between text-xs text-gray-500 font-medium">
-                      <span>Python</span>
-                      <span>1536-Dimensional Matrix Processed</span>
-                      <span>FastAPI</span>
+                    
+                    {/* Visual Code Block */}
+                    <div className="mt-8 rounded-xl border border-white/10 bg-black/40 p-6 font-mono text-sm text-white/50 relative overflow-hidden group-hover:border-[#00f0ff]/30 transition-colors">
+                      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#00f0ff]/50 to-transparent" />
+                      <span className="text-purple-400">SELECT</span> id, 1 - (embedding 
+                      <span className="text-[#00f0ff] animate-pulse"> &lt;=&gt; </span> 
+                      query_embedding) <span className="text-purple-400">AS</span> score <br/>
+                      <span className="text-purple-400">FROM</span> candidates <br/>
+                      <span className="text-purple-400">ORDER BY</span> embedding &lt;=&gt; query_embedding 
+                      <span className="text-purple-400"> LIMIT</span> 1;
                     </div>
                   </div>
                 </div>
               </TiltCard>
 
-              <TiltCard className="absolute right-32 bottom-20 w-[380px] z-10" maxTilt={12}>
-                <div className="card-interactive p-6 border-white/5 bg-black/60 backdrop-blur-3xl shadow-2xl">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="w-12 h-12 rounded-xl bg-[var(--accent-secondary)]/20 flex items-center justify-center text-[var(--accent-secondary)]">
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
+              {/* Feature 2: Tall */}
+              <TiltCard className="md:col-span-1 md:row-span-2 h-full" maxTilt={5}>
+                <div className="card-interactive h-full w-full p-10 border border-white/5 bg-gradient-to-b from-white/[0.03] to-transparent overflow-hidden relative group">
+                  <div className="absolute inset-0 bg-gradient-to-b from-[#7a00ff]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                  
+                  <div className="relative z-10">
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/5 border border-white/10 mb-8 text-[#7a00ff]">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                     </div>
-                    <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold bg-white/5 px-3 py-1 rounded-full border border-white/10">Just Posted</span>
+                    <h3 className="text-3xl font-display font-bold mb-4 leading-tight">Zero-Trust<br/>Bias Control</h3>
+                    <p className="text-white/50 text-lg font-medium leading-relaxed mb-12">Our embedding models are mathematically stripped of gender, race, and age classifiers before matching occurs. Pure meritocracy.</p>
                   </div>
-                  <h4 className="text-white font-bold text-xl mb-1">Senior Lead Backend Eng.</h4>
-                  <p className="text-gray-400 text-sm mb-4">Anthropic • San Francisco, CA</p>
-                  <div className="flex gap-2">
-                    <span className="px-3 py-1 rounded-full bg-white/5 text-gray-300 text-xs font-semibold border border-white/5">Python</span>
-                    <span className="px-3 py-1 rounded-full bg-white/5 text-gray-300 text-xs font-semibold border border-white/5">Async</span>
-                    <span className="px-3 py-1 rounded-full bg-white/5 text-gray-300 text-xs font-semibold border border-white/5">Vector DB</span>
+
+                  {/* Visual Abstract Art */}
+                  <div className="absolute bottom-[-10%] right-[-10%] w-[120%] h-[50%] flex items-center justify-center">
+                     <div className="w-[300px] h-[300px] rounded-full border border-white/10 shrink-0 relative flex items-center justify-center group-hover:scale-110 transition-transform duration-1000">
+                       <div className="w-[200px] h-[200px] rounded-full border border-[#7a00ff]/30 shrink-0" />
+                       <div className="w-[100px] h-[100px] rounded-full border border-[#00f0ff]/50 shrink-0 absolute" />
+                       <div className="w-[10px] h-[10px] rounded-full bg-white absolute shadow-[0_0_20px_white]" />
+                     </div>
                   </div>
                 </div>
               </TiltCard>
-            </motion.div>
+
+              {/* Feature 3: Standard */}
+              <TiltCard className="md:col-span-1 md:row-span-1 h-full" maxTilt={8}>
+                <div className="card-interactive h-full w-full p-10 border border-white/5 bg-gradient-to-tr from-white/[0.03] to-transparent group">
+                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/5 border border-white/10 mb-8 text-white">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                  </div>
+                  <h3 className="text-2xl font-display font-bold mb-4">Magic-Byte Parsing</h3>
+                  <p className="text-white/50 font-medium">Automatic PDF extraction pipeline that reads raw byte-streams to perfectly parse chaotic resumes.</p>
+                </div>
+              </TiltCard>
+
+              {/* Feature 4: Standard */}
+              <TiltCard className="md:col-span-1 md:row-span-1 h-full" maxTilt={8}>
+                <div className="card-interactive h-full w-full p-10 border border-white/5 bg-gradient-to-tl from-white/[0.03] to-transparent group">
+                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/5 border border-white/10 mb-8 text-[#00ff87]">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                  </div>
+                  <h3 className="text-2xl font-display font-bold mb-4">Automated Workflows</h3>
+                  <p className="text-white/50 font-medium">Instantly generate tailored interview questions and match explanations per candidate.</p>
+                </div>
+              </TiltCard>
+            </div>
           </div>
+        </section>
+
+        {/* =========================================
+            INFINITE MARQUEE
+            ========================================= */}
+        <section className="py-20 bg-black overflow-hidden border-y border-white/[0.02]">
+          <div className="flex w-[200vw] marquee-inner opacity-50 hover:opacity-100 transition-opacity duration-1000">
+             {[...Array(4)].map((_, j) => (
+                <div key={j} className="flex shrink-0 items-center justify-around w-[100vw]">
+                  <span className="font-display text-[5vw] font-black uppercase tracking-tighter text-transparent stroke-text">NO KEYWORDS</span>
+                  <span className="w-4 h-4 rounded-full bg-[#00f0ff]" />
+                  <span className="font-display text-[5vw] font-black uppercase tracking-tighter text-white">PURE MATH</span>
+                  <span className="w-4 h-4 rounded-full bg-[#7a00ff]" />
+                </div>
+             ))}
+          </div>
+        </section>
+
+        {/* =========================================
+            MASSIVE METRICS
+            ========================================= */}
+        <section className="py-40 relative z-10 bg-black">
+          <div className="container mx-auto px-6 max-w-[1400px]">
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-20">
+               {[
+                 { stat: "15ms", label: "P99 Latency" },
+                 { stat: "1536", label: "Dimensions" },
+                 { stat: "98%", label: "Accuracy" }
+               ].map((item, i) => (
+                 <motion.div 
+                   key={i}
+                   initial={{ opacity: 0, y: 50 }}
+                   whileInView={{ opacity: 1, y: 0 }}
+                   viewport={{ once: true }}
+                   transition={{ duration: 0.8, delay: i * 0.2 }}
+                   className="flex flex-col items-center text-center border-l border-white/10 pl-10"
+                 >
+                    <div className="font-display text-[clamp(4rem,8vw,7rem)] font-black text-white leading-none mb-4 -ml-4 tracking-tighter mix-blend-difference">
+                      {item.stat}
+                    </div>
+                    <div className="text-[#00f0ff] uppercase tracking-[0.3em] font-bold text-sm">
+                      {item.label}
+                    </div>
+                 </motion.div>
+               ))}
+             </div>
+          </div>
+        </section>
+
+        {/* =========================================
+            IMMERSIVE FOOTER / CTA
+            ========================================= */}
+        <section className="relative py-40 min-h-[800px] flex items-center justify-center overflow-hidden bg-black rounded-t-[4rem] border-t border-white/5">
+          <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-primary)] to-transparent z-10 pointer-events-none" />
           
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-center text-white/50 animate-bounce cursor-pointer flex flex-col items-center">
-            <span className="text-[10px] tracking-widest uppercase mb-2 font-bold">Discover</span>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
+          {/* Animated Mesh Core */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] opacity-40 mix-blend-screen pointer-events-none">
+            <motion.div className="w-full h-full rounded-full bg-gradient-to-tr from-[#00f0ff] to-[#7a00ff] blur-[150px]" animate={{ rotate: 360, scale: [1, 1.2, 0.8, 1] }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} />
           </div>
-        </section>
 
-        {/* Marquee Banner */}
-        <section className="bg-[var(--accent-primary)]/10 border-y border-[var(--accent-primary)]/20 py-5 overflow-hidden backdrop-blur-md relative z-10">
-          <div className="flex w-full marquee-inner shadow-[0_0_30px_rgba(0,240,255,0.1)]">
-            <div className="flex gap-16 shrink-0 pr-16 items-center">
-              {MARQUEE_ITEMS.map((item, i) => (
-                <span key={`a-${i}`} className={`font-display text-sm uppercase tracking-[0.3em] font-extrabold ${item === "✦" ? "text-white" : "text-[var(--accent-primary)]"}`}>
-                  {item}
-                </span>
-              ))}
-            </div>
-            <div className="flex gap-16 shrink-0 pr-16 items-center">
-              {MARQUEE_ITEMS.map((item, i) => (
-                <span key={`b-${i}`} className={`font-display text-sm uppercase tracking-[0.3em] font-extrabold ${item === "✦" ? "text-white" : "text-[var(--accent-primary)]"}`}>
-                  {item}
-                </span>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Cinematic Step Section */}
-        <section className="py-32 px-6 lg:px-12 relative">
-          <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-black/80 to-transparent pointer-events-none" />
-          <div className="max-w-[1400px] mx-auto">
-            <ScrollReveal>
-              <div className="flex flex-col md:flex-row items-end justify-between mb-20 gap-8">
-                <div className="max-w-3xl">
-                  <h2 className="text-white font-display text-[clamp(2.5rem,5vw,4rem)] font-extrabold tracking-tighter leading-tight mb-6">
-                    Three Steps. <br /> Zero Noise.
-                  </h2>
-                  <p className="text-gray-400 text-xl font-medium max-w-xl">
-                    We eliminated the legacy ATS tracking bloat. Upload your pdf, we calculate the dense embedding matrix, and match you to jobs in O(1) time complexity.
-                  </p>
-                </div>
-                <MagneticButton strength={0.3}>
-                  <Link href="/signup" className="flex items-center gap-3 text-white font-bold bg-white/5 hover:bg-white/10 border border-white/20 px-8 py-4 rounded-full transition-all">
-                    Get Started <span className="text-[var(--accent-primary)]">→</span>
-                  </Link>
-                </MagneticButton>
-              </div>
-            </ScrollReveal>
+          <div className="relative z-20 container mx-auto px-6 text-center">
+            <motion.h2 
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1 }}
+              className="font-display text-[clamp(4rem,10vw,8rem)] font-black text-white leading-[0.9] tracking-tighter mb-12"
+            >
+              Ready to <br />
+              <span className="italic font-light">Evolve?</span>
+            </motion.h2>
 
             <motion.div 
-              className="grid lg:grid-cols-3 gap-6"
-              variants={staggerContainer}
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true, amount: 0.1 }}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1, delay: 0.2 }}
+              className="flex flex-col sm:flex-row gap-6 justify-center"
             >
-              {[
-                { num: "01", title: "Upload & Parse", desc: "Drop any resume. Our AI natively rips text via magic-bytes validation.", color: "from-[#00f0ff] to-[#0084ff]" },
-                { num: "02", title: "Compute Identity", desc: "We hash your expertise into a 1536-dimensional hyper-vector constraint array.", color: "from-[#7a00ff] to-[#ff007a]" },
-                { num: "03", title: "Cosine Match", desc: "Postgres pgvector instantly searches the absolute best mathematically fitting companies.", color: "from-[#00ff87] to-[#00f0ff]" }
-              ].map((s) => (
-                <motion.div key={s.num} variants={fadeUp}>
-                  <TiltCard maxTilt={5}>
-                    <div className="card-interactive min-h-[380px] p-10 flex flex-col justify-between group overflow-hidden relative">
-                      <div className={`absolute -right-20 -top-20 w-64 h-64 bg-gradient-to-br ${s.color} rounded-full blur-[80px] opacity-0 group-hover:opacity-30 transition-opacity duration-700`} />
-                      
-                      <div className="font-display text-[4rem] font-black text-white/5 self-end transition-colors group-hover:text-white/10 line-height-1">
-                        {s.num}
-                      </div>
-                      
-                      <div>
-                        <div className={`w-12 h-1 mb-8 bg-gradient-to-r ${s.color} rounded-full`} />
-                        <h3 className="text-white font-display text-2xl font-bold mb-4 tracking-tight">{s.title}</h3>
-                        <p className="text-gray-400 leading-relaxed font-medium">{s.desc}</p>
-                      </div>
-                    </div>
-                  </TiltCard>
-                </motion.div>
-              ))}
+               <MagneticButton strength={0.2}>
+                  <Link href="/signup/employer" className="inline-flex items-center justify-center px-10 py-5 bg-white text-black rounded-full font-bold text-xl hover:bg-[#00f0ff] transition-colors duration-500 min-w-[200px]">
+                    Deploy Engine
+                  </Link>
+               </MagneticButton>
+               <MagneticButton strength={0.2}>
+                  <Link href="/signup/candidate" className="inline-flex items-center justify-center px-10 py-5 bg-transparent border border-white/20 text-white rounded-full font-bold text-xl hover:bg-white/10 backdrop-blur-md transition-all duration-500 min-w-[200px]">
+                    Get Evaluated
+                  </Link>
+               </MagneticButton>
             </motion.div>
           </div>
-        </section>
-
-        {/* Global Impact Platform Metrics */}
-        <section className="py-32 border-y border-[var(--border)] relative bg-black/50 backdrop-blur-lg">
-          <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay" />
-          <div className="max-w-[1400px] mx-auto px-6 lg:px-12 relative z-10 flex flex-col lg:flex-row gap-20 items-center">
-            
-            <div className="flex-1 w-full grid grid-cols-2 gap-4">
-              {[
-                { stat: "98.7%", label: "Placement Accuracy" },
-                { stat: "15ms", label: "Average Match Time" },
-                { stat: "0%", label: "Gender/Race Bias" },
-                { stat: "O(1)", label: "Query Complexity" },
-              ].map((s, i) => (
-                <ScrollReveal key={s.label} delay={i * 0.1}>
-                  <div className="card-sharp flex flex-col justify-center items-center text-center p-10 h-full">
-                    <h4 className="text-[var(--accent-primary)] font-display text-4xl lg:text-5xl font-black mb-3 drop-shadow-[0_0_15px_rgba(0,240,255,0.3)]">{s.stat}</h4>
-                    <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">{s.label}</p>
-                  </div>
-                </ScrollReveal>
-              ))}
-            </div>
-
-            <div className="flex-1 max-w-xl">
-              <ScrollReveal>
-                <div className="inline-block px-4 py-2 bg-[var(--accent-secondary)]/10 border border-[var(--accent-secondary)]/30 rounded-full text-[var(--accent-secondary)] text-sm font-bold tracking-widest mb-6">
-                  ENGINEERING SUPERIORITY
-                </div>
-                <h2 className="font-display text-[clamp(2rem,4vw,3.5rem)] text-white font-black leading-[1.1] tracking-tighter mb-8">
-                  Built for Mechanical Sympathy.
-                </h2>
-                <p className="text-gray-400 text-lg leading-relaxed mb-10 font-medium">
-                  We don&apos;t use basic text search. By combining Asynchronous PostgreSQL bindings (`asyncpg`) with C-compiled Native Vector extensions (`pgvector`), we execute deep Cosine Similarity algorithms at the absolute hardware limit.
-                </p>
-                <MagneticButton strength={0.2}>
-                  <Link href="/jobs" className="btn-primary w-fit font-bold tracking-wide">
-                    Experience The Speed
-                  </Link>
-                </MagneticButton>
-              </ScrollReveal>
-            </div>
-          </div>
-        </section>
-
-        {/* Immersive CTA */}
-        <section className="relative py-40 overflow-hidden flex items-center justify-center">
-          <div className="absolute inset-0 bg-[var(--accent-primary)]/5" />
-          <motion.div 
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[800px] aspect-square bg-[var(--accent-secondary)]/20 rounded-full blur-[120px] mix-blend-screen"
-            animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
-            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-          />
-          
-          <ScrollReveal amount={0.3}>
-            <div className="relative z-10 text-center px-6 max-w-4xl mx-auto backdrop-blur-sm p-12 rounded-3xl border border-white/5 bg-black/20 shadow-2xl">
-              <h2 className="font-display text-white text-[clamp(3rem,6vw,5rem)] font-black tracking-tighter leading-none mb-8">
-                Stop <span className="text-[var(--text-secondary)]">Searching.</span><br/>
-                Start <span className="text-[var(--accent-primary)] drop-shadow-[0_0_20px_rgba(0,240,255,0.4)]">Matching.</span>
-              </h2>
-              <div className="flex flex-col sm:flex-row gap-6 justify-center mt-12">
-                <MagneticButton strength={0.4}>
-                  <Link href="/signup/candidate" className="btn-primary px-12 py-5 text-lg font-extrabold w-full sm:w-auto text-center hover:scale-105 transition-transform duration-300 shadow-[0_0_30px_rgba(0,240,255,0.3)]">
-                    CANDIDATES
-                  </Link>
-                </MagneticButton>
-                <MagneticButton strength={0.4}>
-                  <Link href="/signup/employer" className="btn-ghost px-12 py-5 text-lg font-extrabold w-full sm:w-auto text-center hover:bg-white/5 hover:border-white transition-all backdrop-blur-md">
-                    EMPLOYERS
-                  </Link>
-                </MagneticButton>
-              </div>
-            </div>
-          </ScrollReveal>
         </section>
       </main>
 
-      <Footer />
+      {/* Global CSS for stroke text */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .stroke-text {
+          -webkit-text-stroke: 1px rgba(255, 255, 255, 0.3);
+          color: transparent;
+        }
+      `}} />
     </div>
   );
 }
